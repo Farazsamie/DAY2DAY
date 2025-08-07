@@ -1,9 +1,1245 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Test JS</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAY2DAY | Faraz Samie</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #ffffff, #ffffff);
+            padding: 1.5rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .countdown-container {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .countdown-box {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 0.75rem;
+        }
+
+        .countdown-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .countdown-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        .countdown-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .countdown-time {
+            font-family: sans-serif;
+            font-size: 1.125rem;
+            font-weight: bold;
+        }
+
+        .purple { color: #242121; }
+        .orange { color: #242121; }
+
+        .controls-container {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-green { background-color: #252121; }
+        .btn-green:hover { background-color: #252121; }
+        .btn-blue { background-color: #252121; }
+        .btn-blue:hover { background-color: #376494; }
+        .btn-purple { background-color: #252121; }
+        .btn-purple:hover { background-color: #252121; }
+        .btn-indigo { background-color: #252121; }
+        .btn-indigo:hover { background-color: #252121; }
+        .btn-red { background-color: #252121; }
+        .btn-red:hover { background-color: #252121; }
+        .btn-yellow { background-color: #252121; }
+        .btn-yellow:hover { background-color: #252121; }
+        .btn-gray { background-color: #252121; }
+        .btn-gray:hover { background-color: #252121; }
+
+        .title {
+            font-size: 2.25rem;
+            font-weight: bold;
+            text-align: center;
+            color: #374151;
+            margin: 3rem 0 2rem 0;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #39537c;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .time-display {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .time-main {
+            font-family: sans-serif;
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .time-blue { color: #242121; }
+        .time-purple { color: #242121; }
+        .time-red { color: #242121; }
+
+        .time-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .time-sublabel {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .form-input:disabled, .form-select:disabled {
+            background-color: #f9fafb;
+            color: #6b7280;
+            cursor: not-allowed;
+        }
+
+        .timer-inputs {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .timer-input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .timer-input {
+            width: 5rem;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            text-align: center;
+            font-family: sans-serif;
+            font-size: 1rem;
+        }
+
+        .timer-colon {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #9ca3af;
+            margin-top: 1.5rem;
+        }
+
+        .current-task {
+            background-color: #faf5ff;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: #374151;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-bottom: 0.25rem;
+            border: 1px solid;
+        }
+
+        .cat-islam { background-color: #dcfce7; color: #166534; border-color: #bbf7d0; }
+        .cat-career { background-color: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
+        .cat-physical { background-color: #fee2e2; color: #991b1b; border-color: #fecaca; }
+        .cat-personal-assets { background-color: #fef3c7; color: #92400e; border-color: #fde68a; }
+        .cat-interests { background-color: #e9d5ff; color: #6b21a8; border-color: #d8b4fe; }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .history-container {
+            max-height: 24rem;
+            overflow-y: auto;
+        }
+
+        .history-empty {
+            text-align: center;
+            color: #6b7280;
+            padding: 2rem 0;
+        }
+
+        .history-empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .day-group {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .day-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background-color: #f9fafb;
+            border: none;
+            border-radius: 0.5rem 0.5rem 0 0;
+            cursor: pointer;
+            font-weight: 500;
+            color: #374151;
+            transition: background-color 0.2s;
+        }
+
+        .day-header:hover {
+            background-color: #f3f4f6;
+        }
+
+        .prayer-time-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            background-color: #eff6ff;
+            border: none;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-weight: 500;
+            color: #1e40af;
+            transition: background-color 0.2s;
+            margin-bottom: 0.5rem;
+        }
+
+        .prayer-time-header:hover {
+            background-color: #dbeafe;
+        }
+
+        .prayer-time-stats {
+            font-size: 0.75rem;
+            color: #2563eb;
+        }
+
+        .session-entry {
+            background-color: #f9fafb;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            border-left: 4px solid #7c3aed;
+            margin: 0.5rem 0 0.5rem 1rem;
+        }
+
+        .session-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .session-title {
+            font-weight: 500;
+            color: #374151;
+            font-size: 0.875rem;
+        }
+
+        .session-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .stat-label {
+            color: #6b7280;
+        }
+
+        .stat-value {
+            font-family: sans-serif;
+        }
+
+        .stat-timer { color: #374151; }
+        .stat-unfocus { color: #2563eb; }
+        .stat-focus { color: #059669; font-weight: bold; }
+
+        .session-time {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        .chevron {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.2s;
+        }
+
+        .chevron.expanded {
+            transform: rotate(90deg);
+        }
+
+        .animate-pulse {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .timebox-view {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f0f8ff, #e6f3ff);
+            padding: 1.5rem;
+        }
+
+        .timebox-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .timebox-title {
+            font-size: 2.25rem;
+            font-weight: bold;
+            color: #374151;
+        }
+
+        .timebox-grid {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+        }
+
+        .slots-container {
+            display: flex;
+            gap: 0.25rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+        }
+
+        .time-slot {
+            padding: 0.75rem;
+            border: 1px solid #e5e7eb;
+            min-height: 8rem;
+            min-width: 8rem;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .slot-empty {
+            background-color: #f9fafb;
+        }
+
+        .slot-has-session {
+            background-color: #f0fdf4;
+        }
+
+        .slot-time {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .slot-prayer {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .slot-session {
+            margin-bottom: 0.5rem;
+        }
+
+        .slot-task {
+            font-size: 0.75rem;
+            color: #374151;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .slot-focus {
+            font-size: 0.75rem;
+            color: #059669;
+            font-weight: 600;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .countdown-container {
+                position: static;
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                margin-bottom: 1rem;
+            }
+            
+            .controls-container {
+                position: static;
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                margin-bottom: 1rem;
+            }
+            
+            .title {
+                margin: 1rem 0;
+            }
+        }
+    </style>
 </head>
 <body>
-  <script src="focus-timer.js"></script>
+    <div id="timerView" class="container">
+        <!-- Countdown Timers -->
+        <div class="countdown-container">
+            <div class="countdown-box">
+                <div class="countdown-header">
+                    <svg class="countdown-icon purple" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                    </svg>
+                    <div class="countdown-label">APRIL 3RD, 2026 </div>
+                </div>
+                <div class="countdown-time purple" id="countdown1">Loading..</div>
+            </div>
+            
+            <div class="countdown-box">
+                <div class="countdown-header">
+                    <svg class="countdown-icon orange" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                    </svg>
+                    <div class="countdown-label"> 3RD OF NEXT MONTH</div>
+                </div>
+                <div class="countdown-time orange" id="countdown2">Loading..</div>
+            </div>
+        </div>
+
+        <!-- Export and View Controls -->
+        <div class="controls-container">
+            <div class="controls-row">
+                <button class="btn btn-green" onclick="exportToExcel()">
+                    Excel
+                </button>
+                <button class="btn btn-blue" onclick="exportToJSON()">
+                    JSON
+                </button>
+            </div>
+            
+            <div class="controls-row">
+                <label class="btn btn-purple" for="fileInput">
+                    Import
+                </label>
+                <input type="file" id="fileInput" accept=".json" onchange="importFromJSON(event)">
+                <button class="btn btn-indigo" onclick="switchToTimebox()">
+                    TimeBox
+                </button>
+            </div>
+            
+            <button class="btn btn-red" onclick="clearAllData()">
+                Clear All
+            </button>
+        </div>
+
+        <h1 class="title"> </h1>
+        
+        <div class="main-grid">
+            <!-- Stopwatch -->
+            <div class="card">
+                <h2 class="card-title">Unproductivity Time</h2>
+                
+                <div class="time-display">
+                    <div class="time-main time-blue" id="stopwatchDisplay">00:00.00</div>
+                    <div class="time-label">mm:ss.cs</div>
+                    <div class="time-sublabel"></div>
+                </div>
+
+                <div class="button-group">
+                    <button id="stopwatchStart" class="btn btn-green" onclick="startStopwatch()">
+                        ▶ start
+                    </button>
+                    <button id="stopwatchPause" class="btn btn-yellow hidden" onclick="pauseStopwatch()">
+                        ⏸ pause
+                    </button>
+                    <button class="btn btn-gray" onclick="resetStopwatch()">
+                        reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Timer -->
+            <div class="card">
+                <h2 class="card-title">Deep Work Time</h2>
+                
+                <!-- Category Selection -->
+                <div class="form-group">
+                    <label class="form-label">Categorize</label>
+                    <select id="categorySelect" class="form-select">
+                        <option value="Islam">Islam</option>
+                        <option value="Career">Career</option>
+                        <option value="Physical">Physical Health</option>
+                        <option value="Personal Assets">Personal Assets</option>
+                        <option value="Interests">Interests</option>
+                    </select>
+                </div>
+
+                <!-- Task Description Input -->
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <input type="text" id="taskInput" class="form-input" placeholder="Enter your task description...">
+                </div>
+                
+                <div class="time-display">
+                    <div class="time-main time-purple" id="timerDisplay">00:00</div>
+                    <div class="time-label">mm:ss</div>
+                    <div id="currentTask" class="current-task hidden"></div>
+                    <div id="timerFinished" class="time-red hidden" style="font-weight: 600; margin-top: 0.5rem;">Cutoff Time </div>
+                </div>
+
+                <!-- Timer Input -->
+                <div class="timer-inputs">
+                    <div class="timer-input-group">
+                        <label class="time-label" style="margin-bottom: 0.25rem;">minutes</label>
+                        <input type="number" id="timerMinutes" class="timer-input" min="0" max="59" value="5">
+                    </div>
+                    <div class="timer-colon">:</div>
+                    <div class="timer-input-group">
+                        <label class="time-label" style="margin-bottom: 0.25rem;">seconds</label>
+                        <input type="number" id="timerSeconds" class="timer-input" min="0" max="59" value="0">
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button id="timerStart" class="btn btn-green" onclick="startTimer()">
+                        ▶ Start
+                    </button>
+                    <button id="timerPause" class="btn btn-yellow hidden" onclick="pauseTimer()">
+                        ⏸ Pause
+                    </button>
+                    <button class="btn btn-gray" onclick="resetTimer()">
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Focus History -->
+            <div class="card">
+                <h2 class="card-title">Focus History</h2>
+                
+                <div id="historyContainer" class="history-container">
+                    <div id="historyEmpty" class="history-empty">
+                        <div class="history-empty-icon"></div>
+                        <p>Complete a focus session to see your stats here!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timebox View -->
+    <div id="timeboxView" class="timebox-view hidden">
+        <div class="container">
+            <div class="timebox-nav">
+                <button class="btn btn-gray" onclick="switchToTimer()">
+                    Back to Timer
+                </button>
+                <h1 class="timebox-title">Today's Time Box</h1>
+                <div></div>
+            </div>
+
+            <div class="timebox-grid">
+                <div class="slots-container" id="timeSlotsContainer">
+                    <!-- Time slots will be generated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let stopwatchTime = 0;
+        let isStopwatchRunning = false;
+        let stopwatchInterval = null;
+
+        let timerTime = 0;
+        let originalTimerTime = 0;
+        let isTimerRunning = false;
+        let isTimerFinished = false;
+        let timerInterval = null;
+        let currentTask = '';
+        let currentCategory = '';
+
+        let focusHistory = [];
+        let expandedDays = {};
+        let expandedPrayerTimes = {};
+        let currentView = 'timer';
+
+        const categories = ['Islam', 'Career', 'Physical', 'Personal Assets', 'Interests'];
+
+        // Prayer time periods
+        function getPrayerTimePeriod(hour) {
+            if (hour >= 4 && hour < 7) return 'Fajr';
+            if (hour >= 8 && hour < 11) return 'Post Fajr';
+            if (hour >= 11 && hour < 15) return 'Dhuhr';
+            if (hour >= 15 && hour < 18) return 'Asr';
+            if (hour >= 18 && hour < 20) return 'Maghrib';
+            return 'Isha';
+        }
+
+        // Format time functions
+        function formatTime(centiseconds) {
+            const totalSeconds = Math.floor(centiseconds / 100);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            const cs = centiseconds % 100;
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${cs.toString().padStart(2, '0')}`;
+        }
+
+        function formatTimerTime(totalSeconds) {
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function formatFocusTime(centiseconds) {
+            const totalSeconds = Math.floor(centiseconds / 100);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${minutes}m ${seconds}s`;
+        }
+
+        // Play completion sound
+        function playCompletionSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                const oscillator1 = audioContext.createOscillator();
+                const oscillator2 = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator1.connect(gainNode);
+                oscillator2.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator1.frequency.setValueAtTime(523.25, audioContext.currentTime);
+                oscillator2.frequency.setValueAtTime(659.25, audioContext.currentTime);
+                
+                oscillator1.type = 'sine';
+                oscillator2.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+                
+                oscillator1.start(audioContext.currentTime);
+                oscillator2.start(audioContext.currentTime);
+                oscillator1.stop(audioContext.currentTime + 1);
+                oscillator2.stop(audioContext.currentTime + 1);
+            } catch (error) {
+                console.log('Audio not supported');
+            }
+        }
+
+        // Stopwatch functions
+        function startStopwatch() {
+            isStopwatchRunning = true;
+            document.getElementById('stopwatchStart').classList.add('hidden');
+            document.getElementById('stopwatchPause').classList.remove('hidden');
+            
+            stopwatchInterval = setInterval(() => {
+                stopwatchTime++;
+                document.getElementById('stopwatchDisplay').textContent = formatTime(stopwatchTime);
+            }, 10);
+        }
+
+        function pauseStopwatch() {
+            isStopwatchRunning = false;
+            document.getElementById('stopwatchStart').classList.remove('hidden');
+            document.getElementById('stopwatchPause').classList.add('hidden');
+            clearInterval(stopwatchInterval);
+        }
+
+        function resetStopwatch() {
+            isStopwatchRunning = false;
+            stopwatchTime = 0;
+            document.getElementById('stopwatchStart').classList.remove('hidden');
+            document.getElementById('stopwatchPause').classList.add('hidden');
+            document.getElementById('stopwatchDisplay').textContent = formatTime(0);
+            clearInterval(stopwatchInterval);
+        }
+
+        // Timer functions
+        function startTimer() {
+            const taskInput = document.getElementById('taskInput');
+            const categorySelect = document.getElementById('categorySelect');
+            const minutesInput = document.getElementById('timerMinutes');
+            const secondsInput = document.getElementById('timerSeconds');
+            
+            if (timerTime === 0 && taskInput.value.trim()) {
+                const totalSeconds = parseInt(minutesInput.value) * 60 + parseInt(secondsInput.value);
+                if (totalSeconds === 0) {
+                    alert('Please set a timer duration greater than 0');
+                    return;
+                }
+                timerTime = totalSeconds;
+                originalTimerTime = totalSeconds;
+                currentTask = taskInput.value;
+                currentCategory = categorySelect.value;
+                
+                // Show current task
+                const currentTaskDiv = document.getElementById('currentTask');
+                currentTaskDiv.innerHTML = `
+                    <div class="category-badge ${getCategoryClass(currentCategory)}">${currentCategory}</div>
+                    <div>Working on: ${currentTask}</div>
+                `;
+                currentTaskDiv.classList.remove('hidden');
+                
+                // Disable inputs
+                taskInput.disabled = true;
+                categorySelect.disabled = true;
+                minutesInput.disabled = true;
+                secondsInput.disabled = true;
+            }
+            
+            if (!taskInput.value.trim()) {
+                alert('Please enter a task description');
+                return;
+            }
+            
+            isTimerRunning = true;
+            isTimerFinished = false;
+            document.getElementById('timerStart').classList.add('hidden');
+            document.getElementById('timerPause').classList.remove('hidden');
+            document.getElementById('timerFinished').classList.add('hidden');
+            document.getElementById('timerDisplay').classList.remove('animate-pulse');
+            
+            timerInterval = setInterval(() => {
+                timerTime--;
+                document.getElementById('timerDisplay').textContent = formatTimerTime(timerTime);
+                
+                if (timerTime <= 0) {
+                    // Timer finished
+                    isTimerRunning = false;
+                    isTimerFinished = true;
+                    clearInterval(timerInterval);
+                    
+                    document.getElementById('timerStart').classList.remove('hidden');
+                    document.getElementById('timerPause').classList.add('hidden');
+                    document.getElementById('timerFinished').classList.remove('hidden');
+                    document.getElementById('timerDisplay').classList.add('animate-pulse');
+                    
+                    // Calculate focus time
+                    const focusTimeCs = originalTimerTime * 100 - stopwatchTime;
+                    const now = new Date();
+                    const newEntry = {
+                        task: currentTask,
+                        category: currentCategory,
+                        timerTime: originalTimerTime,
+                        stopwatchTime: stopwatchTime,
+                        focusTime: Math.max(0, focusTimeCs),
+                        timestamp: now.toISOString(),
+                        prayerTime: getPrayerTimePeriod(now.getHours())
+                    };
+                    focusHistory.push(newEntry);
+                    
+                    playCompletionSound();
+                    renderHistory();
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            isTimerRunning = false;
+            document.getElementById('timerStart').classList.remove('hidden');
+            document.getElementById('timerPause').classList.add('hidden');
+            clearInterval(timerInterval);
+        }
+
+        function resetTimer() {
+            isTimerRunning = false;
+            timerTime = 0;
+            originalTimerTime = 0;
+            isTimerFinished = false;
+            currentTask = '';
+            currentCategory = '';
+            
+            document.getElementById('timerStart').classList.remove('hidden');
+            document.getElementById('timerPause').classList.add('hidden');
+            document.getElementById('timerFinished').classList.add('hidden');
+            document.getElementById('timerDisplay').classList.remove('animate-pulse');
+            document.getElementById('timerDisplay').textContent = '00:00';
+            document.getElementById('currentTask').classList.add('hidden');
+            
+            // Enable inputs
+            document.getElementById('taskInput').disabled = false;
+            document.getElementById('categorySelect').disabled = false;
+            document.getElementById('timerMinutes').disabled = false;
+            document.getElementById('timerSeconds').disabled = false;
+            
+            clearInterval(timerInterval);
+        }
+
+        // Get category CSS class
+        function getCategoryClass(category) {
+            const classes = {
+                'Islam': 'cat-islam',
+                'Career': 'cat-career',
+                'Physical': 'cat-physical',
+                'Personal Assets': 'cat-personal-assets',
+                'Interests': 'cat-interests'
+            };
+            return classes[category] || 'cat-islam';
+        }
+
+        // Group focus history
+        function groupFocusHistory() {
+            const grouped = {};
+            
+            focusHistory.forEach(entry => {
+                const date = new Date(entry.timestamp);
+                const dayKey = date.toDateString();
+                const prayerTime = getPrayerTimePeriod(date.getHours());
+                
+                if (!grouped[dayKey]) {
+                    grouped[dayKey] = {};
+                }
+                if (!grouped[dayKey][prayerTime]) {
+                    grouped[dayKey][prayerTime] = [];
+                }
+                
+                grouped[dayKey][prayerTime].push(entry);
+            });
+            
+            return grouped;
+        }
+
+        // Calculate prayer time totals
+        function calculatePrayerTimeTotals(entries) {
+            return entries.reduce((acc, entry) => {
+                acc.focusTime += entry.focusTime;
+                acc.unfocusTime += entry.stopwatchTime;
+                return acc;
+            }, { focusTime: 0, unfocusTime: 0 });
+        }
+
+        // Toggle expansions
+        function toggleDayExpansion(day) {
+            expandedDays[day] = !expandedDays[day];
+            renderHistory();
+        }
+
+        function togglePrayerTimeExpansion(day, prayerTime) {
+            const key = `${day}-${prayerTime}`;
+            expandedPrayerTimes[key] = !expandedPrayerTimes[key];
+            renderHistory();
+        }
+
+        // Render history
+        function renderHistory() {
+            const container = document.getElementById('historyContainer');
+            const emptyDiv = document.getElementById('historyEmpty');
+            
+            if (focusHistory.length === 0) {
+                emptyDiv.style.display = 'block';
+                container.innerHTML = '<div id="historyEmpty" class="history-empty"><div class="history-empty-icon"></div><p>Complete a focus session to see your stats here!</p></div>';
+                return;
+            }
+            
+            const grouped = groupFocusHistory();
+            const sortedDays = Object.keys(grouped).sort((a, b) => new Date(b) - new Date(a));
+            
+            let html = '';
+            
+            sortedDays.forEach(day => {
+                const isExpanded = expandedDays[day];
+                html += `
+                    <div class="day-group">
+                        <button class="day-header" onclick="toggleDayExpansion('${day}')">
+                            <span>${day}</span>
+                            <svg class="chevron ${isExpanded ? 'expanded' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </button>
+                `;
+                
+                if (isExpanded) {
+                    html += '<div style="padding: 0.75rem;">';
+                    
+                    Object.entries(grouped[day]).forEach(([prayerTime, entries]) => {
+                        const totals = calculatePrayerTimeTotals(entries);
+                        const prayerKey = `${day}-${prayerTime}`;
+                        const isPrayerExpanded = expandedPrayerTimes[prayerKey];
+                        
+                        html += `
+                            <div>
+                                <button class="prayer-time-header" onclick="togglePrayerTimeExpansion('${day}', '${prayerTime}')">
+                                    <div>
+                                        <div style="font-weight: 500; color: #1e40af;">${prayerTime} (${entries.length})</div>
+                                        <div class="prayer-time-stats">
+                                            Focus: ${formatFocusTime(totals.focusTime)} | Unfocus: ${formatFocusTime(totals.unfocusTime)}
+                                        </div>
+                                    </div>
+                                    <svg class="chevron ${isPrayerExpanded ? 'expanded' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </button>
+                        `;
+                        
+                        if (isPrayerExpanded) {
+                            entries.forEach((entry, index) => {
+                                html += `
+                                    <div class="session-entry">
+                                        <div class="session-header">
+                                            <span class="category-badge ${getCategoryClass(entry.category)}">${entry.category}</span>
+                                            <span class="session-title">${entry.task}</span>
+                                        </div>
+                                        <div class="session-stats">
+                                            <div>
+                                                <div class="stat-label">Timer:</div>
+                                                <div class="stat-value stat-timer">${formatTimerTime(entry.timerTime)}</div>
+                                            </div>
+                                            <div>
+                                                <div class="stat-label">Unfocused:</div>
+                                                <div class="stat-value stat-unfocus">${formatFocusTime(entry.stopwatchTime)}</div>
+                                            </div>
+                                            <div>
+                                                <div class="stat-label">Focus:</div>
+                                                <div class="stat-value stat-focus">${formatFocusTime(entry.focusTime)}</div>
+                                            </div>
+                                        </div>
+                                        <div class="session-time">${new Date(entry.timestamp).toLocaleTimeString()}</div>
+                                    </div>
+                                `;
+                            });
+                        }
+                        
+                        html += '</div>';
+                    });
+                    
+                    html += '</div>';
+                }
+                
+                html += '</div>';
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Export functions
+        function exportToExcel() {
+            try {
+                const exportData = focusHistory.map(entry => ({
+                    'Date': new Date(entry.timestamp).toLocaleDateString(),
+                    'Time': new Date(entry.timestamp).toLocaleTimeString(),
+                    'Prayer Time': entry.prayerTime,
+                    'Category': entry.category,
+                    'Task': entry.task,
+                    'Timer Set (seconds)': entry.timerTime,
+                    'Unfocused Time (centiseconds)': entry.stopwatchTime,
+                    'Focus Time (centiseconds)': entry.focusTime,
+                    'Focus Time (minutes)': Math.floor(entry.focusTime / 100 / 60),
+                    'Unfocused Time (minutes)': Math.floor(entry.stopwatchTime / 100 / 60)
+                }));
+
+                const workbook = XLSX.utils.book_new();
+                const worksheet = XLSX.utils.json_to_sheet(exportData);
+                XLSX.utils.book_append_sheet(workbook, worksheet, 'Focus History');
+                XLSX.writeFile(workbook, 'focus-history.xlsx');
+                
+                alert('Focus history exported successfully!');
+            } catch (error) {
+                console.error('Export failed:', error);
+                alert('Export failed. Please try again.');
+            }
+        }
+
+        function exportToJSON() {
+            try {
+                const dataStr = JSON.stringify(focusHistory, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `focus-history-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                alert('Focus history exported as JSON successfully!');
+            } catch (error) {
+                console.error('JSON export failed:', error);
+                alert('JSON export failed. Please try again.');
+            }
+        }
+
+        function importFromJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (Array.isArray(importedData) && importedData.every(entry => 
+                        entry.task && entry.category && entry.timestamp
+                    )) {
+                        const existingTimestamps = new Set(focusHistory.map(entry => entry.timestamp));
+                        const newEntries = importedData.filter(entry => !existingTimestamps.has(entry.timestamp));
+                        
+                        focusHistory = [...focusHistory, ...newEntries].sort(
+                            (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+                        );
+                        
+                        renderHistory();
+                        alert(`Successfully imported ${newEntries.length} new focus sessions!`);
+                    } else {
+                        alert('Invalid JSON file format. Please select a valid focus history export file.');
+                    }
+                } catch (error) {
+                    console.error('JSON import failed:', error);
+                    alert('Failed to import JSON file. Please check the file format.');
+                }
+            };
+            
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function clearAllData() {
+            if (confirm('Are you sure you want to delete all focus history? This cannot be undone!')) {
+                focusHistory = [];
+                expandedDays = {};
+                expandedPrayerTimes = {};
+                renderHistory();
+                alert('All data has been cleared.');
+            }
+        }
+
+        // View switching
+        function switchToTimebox() {
+            currentView = 'timebox';
+            document.getElementById('timerView').classList.add('hidden');
+            document.getElementById('timeboxView').classList.remove('hidden');
+            generateTimeSlots();
+        }
+
+        function switchToTimer() {
+            currentView = 'timer';
+            document.getElementById('timerView').classList.remove('hidden');
+            document.getElementById('timeboxView').classList.add('hidden');
+        }
+
+        // Generate time slots for timebox view
+        function generateTimeSlots() {
+            const container = document.getElementById('timeSlotsContainer');
+            const today = new Date().toDateString();
+            let html = '';
+            
+            for (let hour = 0; hour < 24; hour++) {
+                const time12 = hour === 0 ? '12:00 AM' : hour < 12 ? `${hour}:00 AM` : hour === 12 ? '12:00 PM' : `${hour - 12}:00 PM`;
+                const nextHour12 = (hour + 1) === 0 ? '12:00 AM' : (hour + 1) < 12 ? `${hour + 1}:00 AM` : (hour + 1) === 12 ? '12:00 PM' : `${(hour + 1) - 12}:00 PM`;
+                const prayerTime = getPrayerTimePeriod(hour);
+                
+                const sessions = focusHistory.filter(entry => {
+                    const entryDate = new Date(entry.timestamp);
+                    return entryDate.toDateString() === today && entryDate.getHours() === hour;
+                });
+                
+                const hasSession = sessions.length > 0;
+                
+                html += `
+                    <div class="time-slot ${hasSession ? 'slot-has-session' : 'slot-empty'}">
+                        <div class="slot-time">${time12} - ${nextHour12}</div>
+                        <div class="slot-prayer">${prayerTime}</div>
+                `;
+                
+                sessions.forEach((session, index) => {
+                    html += `
+                        <div class="slot-session">
+                            <div class="category-badge ${getCategoryClass(session.category)}">${session.category}</div>
+                            <div class="slot-task" title="${session.task}">${session.task}</div>
+                            <div class="slot-focus">Focus: ${formatFocusTime(session.focusTime)}</div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // Update countdowns
+        function updateCountdowns() {
+            // April 3rd, 2026 countdown
+            const targetDate = new Date('2026-04-03T00:00:00');
+            const now = new Date();
+            const timeDiff = targetDate - now;
+
+            if (timeDiff > 0) {
+                const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+                
+                document.getElementById('countdown1').textContent = `${days}d ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                document.getElementById('countdown1').textContent = 'April 3rd, 2026';
+            }
+
+            // Next month 3rd countdown
+            const currentDate = new Date();
+            const nextMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 3);
+            const nextMonthDiff = nextMonth - now;
+
+            if (nextMonthDiff > 0) {
+                const nextDays = Math.floor(nextMonthDiff / (1000 * 60 * 60 * 24));
+                const nextHours = Math.floor((nextMonthDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const nextMinutes = Math.floor((nextMonthDiff % (1000 * 60 * 60)) / (1000 * 60));
+                const nextSeconds = Math.floor((nextMonthDiff % (1000 * 60)) / 1000);
+                
+                document.getElementById('countdown2').textContent = `${nextDays}d ${nextHours.toString().padStart(2, '0')}:${nextMinutes.toString().padStart(2, '0')}:${nextSeconds.toString().padStart(2, '0')}`;
+            }
+        }
+
+        // Initialize the app
+        function init() {
+            updateCountdowns();
+            setInterval(updateCountdowns, 1000);
+            renderHistory();
+            
+            // Update timer display every second when running
+            document.getElementById('timerDisplay').textContent = formatTimerTime(timerTime);
+            document.getElementById('stopwatchDisplay').textContent = formatTime(stopwatchTime);
+        }
+
+        // Start the app when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 </html>
