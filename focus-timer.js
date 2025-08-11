@@ -59,11 +59,12 @@ export default function StopwatchTimer() {
   // Prayer time periods
   const getPrayerTimePeriod = (hour) => {
     if (hour >= 4 && hour < 7) return 'Fajr';
-    if (hour >= 8 && hour < 11) return 'Post Fajr';
+    if (hour >= 7 && hour < 11) return 'Post Fajr';
     if (hour >= 11 && hour < 15) return 'Dhuhr';
     if (hour >= 15 && hour < 18) return 'Asr';
     if (hour >= 18 && hour < 20) return 'Maghrib';
-    return 'Isha';
+    if (hour >= 20 && hour < 24) return 'Isha';
+    return 'Other';
   };
 
   // Calculate totals for prayer times
@@ -413,38 +414,38 @@ export default function StopwatchTimer() {
     return () => clearInterval(stopwatchIntervalRef.current);
   }, [isStopwatchRunning]);
 
-  useEffect(() => {
-    if (isTimerRunning && timerTime > 0) {
-      timerIntervalRef.current = setInterval(() => {
-        setTimerTime(prev => {
-          if (prev <= 1) {
-            setIsTimerRunning(false);
-            setIsTimerFinished(true);
-            
-            const focusTimeCs = originalTimerTime * 100 - stopwatchTime;
-            const now = new Date();
-            const newEntry = {
-              task: currentTask,
-              category: currentCategory,
-              timerTime: originalTimerTime,
-              stopwatchTime: stopwatchTime,
-              focusTime: Math.max(0, focusTimeCs),
-              timestamp: now.toISOString(),
-              prayerTime: getPrayerTimePeriod(now.getHours())
-            };
-            setFocusHistory(prev => [...prev, newEntry]);
-            
-            playCompletionSound();
-            
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+useEffect(() => {
+  if (isTimerRunning && timerTime > 0) {
+    timerIntervalRef.current = setInterval(() => {
+      setTimerTime(prev => {
+        if (prev <= 1) {  // Change back to 1
+          setIsTimerRunning(false);
+          setIsTimerFinished(true);
+                     
+          const focusTimeCs = originalTimerTime * 100 - stopwatchTime;
+          const now = new Date();
+          const newEntry = {
+            task: currentTask,
+            category: currentCategory,
+            timerTime: originalTimerTime,
+            stopwatchTime: stopwatchTime,
+            focusTime: Math.max(0, focusTimeCs),
+            timestamp: now.toISOString(),
+            prayerTime: getPrayerTimePeriod(now.getHours())
+          };
+          setFocusHistory(prev => [...prev, newEntry]);
+                     
+          playCompletionSound();
+                     
+          return 0;
+        }
+        return prev - 1;  // Change back to 1
+      });
+    }, 1000);  // Change back to 1000
     } else {
       clearInterval(timerIntervalRef.current);
     }
-
+     
     return () => clearInterval(timerIntervalRef.current);
   }, [isTimerRunning, timerTime, originalTimerTime, stopwatchTime, currentTask, currentCategory]);
 
@@ -482,19 +483,20 @@ export default function StopwatchTimer() {
           </div>
 
           {/* Time Box Grid */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex gap-1 overflow-x-auto">
-              {timeSlots.map((slot, index) => {
-                const sessions = getSessionsForTimeSlot(slot);
-                const hasSession = sessions.length > 0;
-                
-                return (
-                  <div
-                    key={index}
-                    className={`p-3 border border-gray-200 min-h-32 min-w-32 text-xs flex-shrink-0 ${
-                      hasSession ? 'bg-green-50' : 'bg-gray-50'
-                    }`}
-                  >
+          {/* Time Box Grid */}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <div className="grid grid-cols-1 gap-2">
+                    {timeSlots.map((slot, index) => {
+                      const sessions = getSessionsForTimeSlot(slot);
+                      const hasSession = sessions.length > 0;
+                      
+                      return (
+                        <div
+                          key={index}
+                          className={`p-4 border border-gray-200 min-h-16 text-sm ${
+                            hasSession ? 'bg-green-50' : 'bg-gray-50'
+                          }`}
+                        >
                     <div className="font-semibold text-gray-700 mb-2">
                       {slot.start} - {slot.end}
                     </div>
@@ -572,7 +574,7 @@ export default function StopwatchTimer() {
                 onChange={importFromJSON}
                 className="hidden"
               />
-              📁 Import
+              Import
             </label>
             <button
               onClick={() => setCurrentView('timebox')}
@@ -587,7 +589,7 @@ export default function StopwatchTimer() {
             onClick={clearAllData}
             className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg shadow-md transition-colors text-sm"
           >
-            🗑️ Clear All
+            Clear All
           </button>
         </div>
 
@@ -632,8 +634,35 @@ export default function StopwatchTimer() {
                 <RotateCcw size={16} />
                 Reset
               </button>
-            </div>
-          </div>
+
+            <button
+              onClick={() => {
+                if (isTimerRunning || timerTime > 0) {
+                  const focusTimeCs = (originalTimerTime - timerTime) * 100 - stopwatchTime;
+                  const now = new Date();
+                  const newEntry = {
+                    task: currentTask,
+                    category: currentCategory,
+                    timerTime: originalTimerTime,
+                    stopwatchTime: stopwatchTime,
+                    focusTime: Math.max(0, focusTimeCs),
+                    timestamp: now.toISOString(),
+                    prayerTime: getPrayerTimePeriod(now.getHours()),
+                    completed: true
+                  };
+                  setFocusHistory(prev => [...prev, newEntry]);
+                  resetTimer();
+                  playCompletionSound();
+                }
+              }}
+              className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors text-sm"
+              disabled={!isTimerRunning && timerTime === 0}
+            >
+              <Square size={16} />
+              Done
+            </button>
+       </div>
+   </div>
 
           {/* Timer */}
           <div className="bg-white rounded-xl shadow-lg p-8">
