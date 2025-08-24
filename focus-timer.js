@@ -414,40 +414,44 @@ export default function StopwatchTimer() {
     return () => clearInterval(stopwatchIntervalRef.current);
   }, [isStopwatchRunning]);
 
+
 useEffect(() => {
   if (isTimerRunning && timerTime > 0) {
+    const start = Date.now();
+    const target = start + timerTime * 1000;
+
     timerIntervalRef.current = setInterval(() => {
-      setTimerTime(prev => {
-        if (prev <= 1) {  // Change back to 1
-          setIsTimerRunning(false);
-          setIsTimerFinished(true);
-                     
-          const focusTimeCs = originalTimerTime * 100 - stopwatchTime;
-          const now = new Date();
-          const newEntry = {
-            task: currentTask,
-            category: currentCategory,
-            timerTime: originalTimerTime,
-            stopwatchTime: stopwatchTime,
-            focusTime: Math.max(0, focusTimeCs),
-            timestamp: now.toISOString(),
-            prayerTime: getPrayerTimePeriod(now.getHours())
-          };
-          setFocusHistory(prev => [...prev, newEntry]);
-                     
-          playCompletionSound();
-                     
-          return 0;
-        }
-        return prev - 1;  // Change back to 1
-      });
-    }, 1000);  // Change back to 1000
-    } else {
-      clearInterval(timerIntervalRef.current);
-    }
-     
-    return () => clearInterval(timerIntervalRef.current);
-  }, [isTimerRunning, timerTime, originalTimerTime, stopwatchTime, currentTask, currentCategory]);
+      const now = Date.now();
+      const remaining = Math.max(0, Math.round((target - now) / 1000));
+
+      setTimerTime(remaining);
+
+      if (remaining === 0) {
+        setIsTimerRunning(false);
+        setIsTimerFinished(true);
+        
+        const focusTimeCs = originalTimerTime * 100 - stopwatchTime;
+        const newEntry = {
+          task: currentTask,
+          category: currentCategory,
+          timerTime: originalTimerTime,
+          stopwatchTime: stopwatchTime,
+          focusTime: Math.max(0, focusTimeCs),
+          timestamp: new Date().toISOString(),
+          prayerTime: getPrayerTimePeriod(new Date().getHours())
+        };
+        setFocusHistory(prev => [...prev, newEntry]);
+        playCompletionSound();
+        clearInterval(timerIntervalRef.current);
+      }
+    }, 200); // check 5 times per second for smoother accuracy
+  } else {
+    clearInterval(timerIntervalRef.current);
+  }
+
+  return () => clearInterval(timerIntervalRef.current);
+}, [isTimerRunning, timerTime]);
+
 
   const groupedHistory = groupFocusHistory();
   const sortedDays = Object.keys(groupedHistory).sort((a, b) => new Date(b) - new Date(a));

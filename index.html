@@ -38,16 +38,12 @@
                 <button class="btn btn-green" onclick="exportToExcel()">
                     Excel
                 </button>
-                <button class="btn btn-blue" onclick="exportToJSON()">
-                    JSON
-                </button>
             </div>
             
             <div class="controls-row">
                 <label class="btn btn-purple" for="fileInput">
                     Import
                 </label>
-                <input type="file" id="fileInput" accept=".json" onchange="importFromJSON(event)">
                 <button class="btn btn-indigo" onclick="switchToTimebox()">
                     TimeBox
                 </button>
@@ -564,7 +560,6 @@
                 }));
 
                 const workbook = XLSX.utils.book_new();
-                const worksheet = XLSX.utils.json_to_sheet(exportData);
                 XLSX.utils.book_append_sheet(workbook, worksheet, 'Focus History');
                 XLSX.writeFile(workbook, 'focus-history.xlsx');
                 
@@ -575,60 +570,6 @@
             }
         }
 
-        function exportToJSON() {
-            try {
-                const dataStr = JSON.stringify(focusHistory, null, 2);
-                const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                
-                const url = URL.createObjectURL(dataBlob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `focus-history-${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-                
-                alert('Focus history exported as JSON successfully!');
-            } catch (error) {
-                console.error('JSON export failed:', error);
-                alert('JSON export failed. Please try again.');
-            }
-        }
-
-        function importFromJSON(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    
-                    if (Array.isArray(importedData) && importedData.every(entry => 
-                        entry.task && entry.category && entry.timestamp
-                    )) {
-                        const existingTimestamps = new Set(focusHistory.map(entry => entry.timestamp));
-                        const newEntries = importedData.filter(entry => !existingTimestamps.has(entry.timestamp));
-                        
-                        focusHistory = [...focusHistory, ...newEntries].sort(
-                            (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
-                        );
-                        
-                        renderHistory();
-                        alert(`Successfully imported ${newEntries.length} new focus sessions!`);
-                    } else {
-                        alert('Invalid JSON file format. Please select a valid focus history export file.');
-                    }
-                } catch (error) {
-                    console.error('JSON import failed:', error);
-                    alert('Failed to import JSON file. Please check the file format.');
-                }
-            };
-            
-            reader.readAsText(file);
-            event.target.value = '';
-        }
 
         function clearAllData() {
             if (confirm('Are you sure you want to delete all focus history? This cannot be undone!')) {
