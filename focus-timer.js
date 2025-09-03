@@ -338,103 +338,32 @@ export default function StopwatchTimer() {
     setStopwatchTime(0);
   };
 
-  // Timer functions
-  const startTimer = () => {
-    if (timerTime === 0 && taskDescription.trim()) {
-      const totalSeconds = timerMinutes * 60 + timerSeconds;
-      setTimerTime(totalSeconds);
-      setOriginalTimerTime(totalSeconds);
-      setCurrentTask(taskDescription);
-      setCurrentCategory(selectedCategory);
-    }
-    setIsTimerRunning(true);
-    setIsTimerFinished(false);
-  };
+  
+  // ISSUE 
+const startTimer = () => {
+  if (timerTime === 0 && taskDescription.trim()) {
+    const totalSeconds = timerMinutes * 60 + timerSeconds;
+    setTimerTime(totalSeconds);
+    setOriginalTimerTime(totalSeconds);
+    setCurrentTask(taskDescription);
+    setCurrentCategory(selectedCategory);
 
-  const pauseTimer = () => {
-    setIsTimerRunning(false);
-  };
-
-  const resetTimer = () => {
-    setIsTimerRunning(false);
-    setTimerTime(0);
-    setOriginalTimerTime(0);
-    setIsTimerFinished(false);
-    setCurrentTask('');
-    setCurrentCategory('');
-  };
-
-  // Group focus history by day and prayer time
-  const groupFocusHistory = () => {
-    const grouped = {};
-    
-    focusHistory.forEach(entry => {
-      const date = new Date(entry.timestamp);
-      const dayKey = date.toDateString();
-      const prayerTime = getPrayerTimePeriod(date.getHours());
-      
-      if (!grouped[dayKey]) {
-        grouped[dayKey] = {};
-      }
-      if (!grouped[dayKey][prayerTime]) {
-        grouped[dayKey][prayerTime] = [];
-      }
-      
-      grouped[dayKey][prayerTime].push(entry);
-    });
-    
-    return grouped;
-  };
-
-  const toggleDayExpansion = (day) => {
-    setExpandedDays(prev => ({
-      ...prev,
-      [day]: !prev[day]
-    }));
-  };
-
-  const togglePrayerTimeExpansion = (day, prayerTime) => {
-    const key = `${day}-${prayerTime}`;
-    setExpandedPrayerTimes(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-  };
-
-  // Effects for intervals
-  useEffect(() => {
-    if (isStopwatchRunning) {
-      stopwatchIntervalRef.current = setInterval(() => {
-        setStopwatchTime(prev => prev + 1);
-      }, 10);
-    } else {
-      clearInterval(stopwatchIntervalRef.current);
-    }
-
-    return () => clearInterval(stopwatchIntervalRef.current);
-  }, [isStopwatchRunning]);
-
-
-useEffect(() => {
-  if (isTimerRunning && timerTime > 0) {
-    const start = Date.now();
-    const target = start + timerTime * 1000;
-
+    const targetTime = Date.now() + totalSeconds * 1000; // calculate target once
     timerIntervalRef.current = setInterval(() => {
       const now = Date.now();
-      const remaining = Math.max(0, Math.round((target - now) / 1000));
-
+      const remaining = Math.max(0, Math.round((targetTime - now) / 1000));
       setTimerTime(remaining);
 
-      if (remaining === 0) {
+      if (remaining <= 0) {
+        clearInterval(timerIntervalRef.current);
         setIsTimerRunning(false);
         setIsTimerFinished(true);
-        
-        const focusTimeCs = originalTimerTime * 100 - stopwatchTime;
+
+        const focusTimeCs = totalSeconds * 100 - stopwatchTime;
         const newEntry = {
-          task: currentTask,
-          category: currentCategory,
-          timerTime: originalTimerTime,
+          task: taskDescription,
+          category: selectedCategory,
+          timerTime: totalSeconds,
           stopwatchTime: stopwatchTime,
           focusTime: Math.max(0, focusTimeCs),
           timestamp: new Date().toISOString(),
@@ -442,15 +371,29 @@ useEffect(() => {
         };
         setFocusHistory(prev => [...prev, newEntry]);
         playCompletionSound();
-        clearInterval(timerIntervalRef.current);
       }
-    }, 200); // check 5 times per second for smoother accuracy
-  } else {
-    clearInterval(timerIntervalRef.current);
+    }, 200); // update 5 times per second
   }
 
-  return () => clearInterval(timerIntervalRef.current);
-}, [isTimerRunning, timerTime]);
+  setIsTimerRunning(true);
+  setIsTimerFinished(false);
+};
+
+const pauseTimer = () => {
+  setIsTimerRunning(false);
+  clearInterval(timerIntervalRef.current);
+};
+
+const resetTimer = () => {
+  setIsTimerRunning(false);
+  clearInterval(timerIntervalRef.current);
+  setTimerTime(0);
+  setOriginalTimerTime(0);
+  setIsTimerFinished(false);
+  setCurrentTask('');
+  setCurrentCategory('');
+};
+// ISSUE END
 
 
   const groupedHistory = groupFocusHistory();
