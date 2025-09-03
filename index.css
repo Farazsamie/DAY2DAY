@@ -389,7 +389,7 @@
 
         .timebox-view {
             min-height: 100vh;
-            background: linear-gradient(135deg, #f0f8ff, #e6f3ff);
+            background: linear-gradient(135deg, #f0f2e5, #e6f3ff);
             padding: 1.5rem;
         }
 
@@ -411,6 +411,7 @@
             border-radius: 0.75rem;
             box-shadow: 0 10px 15px #0000001a;
             padding: 1.5rem;
+            flex-direction:column;
         }
 
         .slots-container {
