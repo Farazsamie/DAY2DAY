@@ -8,17 +8,6 @@ export default function StopwatchTimer() {
   const [isStopwatchRunning, setIsStopwatchRunning] = useState(false);
   const stopwatchIntervalRef = useRef(null);
 
-  // Timer state
-  const [timerMinutes, setTimerMinutes] = useState(5);
-  const [timerSeconds, setTimerSeconds] = useState(0);
-  const [timerTime, setTimerTime] = useState(0);
-  const [originalTimerTime, setOriginalTimerTime] = useState(0);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [isTimerFinished, setIsTimerFinished] = useState(false);
-  const [taskDescription, setTaskDescription] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Islam');
-  const timerIntervalRef = useRef(null);
-
   // Focus tracking state
   const [focusHistory, setFocusHistory] = useState([]);
   const [currentTask, setCurrentTask] = useState('');
@@ -621,89 +610,84 @@ const resetTimer = () => {
    </div>
 
           {/* Timer */}
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h2 className="text-2xl font-semibold text-gray-700 mb-6 text-center">Focus Timer</h2>
-            
-            {/* Category Selection */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Category
-              </label>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                disabled={isTimerRunning}
-              >
-                {categories.map(category => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-            </div>
+<div className="bg-white rounded-xl shadow-lg p-8">
+  <h2 className="text-2xl font-semibold text-gray-700 mb-6 text-center">Focus Timer</h2>
+  
+  {/* Category Selection */}
+  <div className="mb-4">
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      Category
+    </label>
+    <select
+      value={selectedCategory}
+      onChange={(e) => setSelectedCategory(e.target.value)}
+      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+    >
+      {categories.map(category => (
+        <option key={category} value={category}>{category}</option>
+      ))}
+    </select>
+  </div>
 
-            {/* Task Description Input */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                What are you working on?
-              </label>
-              <input
-                type="text"
-                value={taskDescription}
-                onChange={(e) => setTaskDescription(e.target.value)}
-                placeholder="Enter your task description..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                disabled={isTimerRunning}
-              />
-            </div>
-            
-            <div className="text-center mb-6">
-              <div className={`text-5xl font-mono font-bold mb-4 ${isTimerFinished ? 'text-red-600 animate-pulse' : 'text-purple-600'}`}>
-                {formatTimerTime(timerTime)}
-              </div>
-              <div className="text-sm text-gray-500">MM:SS</div>
-              {currentTask && (
-                <div className="text-xs text-gray-600 mt-2 bg-purple-50 rounded p-2">
-                  <div className={`inline-block px-2 py-1 rounded text-xs mb-1 ${getCategoryColor(currentCategory)}`}>
-                    {currentCategory}
-                  </div>
-                  <div>Working on: {currentTask}</div>
-                </div>
-              )}
-              {isTimerFinished && (
-                <div className="text-red-600 font-semibold mt-2">Time's Up! 🎉</div>
-              )}
-            </div>
+  {/* Task Description Input */}
+  <div className="mb-6">
+    <label className="block text-sm font-medium text-gray-700 mb-2">
+      What are you working on?
+    </label>
+    <input
+      type="text"
+      value={taskDescription}
+      onChange={(e) => setTaskDescription(e.target.value)}
+      placeholder="Enter your task description..."
+      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+    />
+  </div>
 
-            {/* Timer Input */}
-            <div className="mb-6">
-              <div className="flex justify-center items-center gap-4 mb-4">
-                <div className="flex flex-col items-center">
-                  <label className="text-sm text-gray-600 mb-1">Minutes</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="59"
-                    value={timerMinutes}
-                    onChange={(e) => setTimerMinutes(parseInt(e.target.value) || 0)}
-                    className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-center font-mono"
-                    disabled={isTimerRunning}
-                  />
-                </div>
-                <div className="text-2xl font-bold text-gray-400 mt-6">:</div>
-                <div className="flex flex-col items-center">
-                  <label className="text-sm text-gray-600 mb-1">Seconds</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="59"
-                    value={timerSeconds}
-                    onChange={(e) => setTimerSeconds(parseInt(e.target.value) || 0)}
-                    className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-center font-mono"
-                    disabled={isTimerRunning}
-                  />
-                </div>
-              </div>
-            </div>
+  {/* Google Timer Embed */}
+  <div className="mb-6">
+    <iframe
+      src="https://www.google.com/search?q=timer&igu=1"
+      width="100%"
+      height="300"
+      style={{ border: 'none', borderRadius: '8px' }}
+      title="Google Timer"
+    ></iframe>
+  </div>
+
+  {/* Manual Session Logging */}
+  <div className="text-center">
+    <button
+      onClick={() => {
+        if (taskDescription.trim()) {
+          // Since we can't track the exact timer time, ask user or use default
+          const estimatedMinutes = parseInt(prompt("How many minutes did you focus for?") || "25");
+          const estimatedSeconds = estimatedMinutes * 60;
+          const estimatedStopwatch = parseInt(prompt("How many minutes were you unfocused? (optional)") || "0") * 60 * 100;
+          
+          const focusTimeCs = estimatedSeconds * 100 - estimatedStopwatch;
+          const now = new Date();
+          const newEntry = {
+            task: taskDescription,
+            category: selectedCategory,
+            timerTime: estimatedSeconds,
+            stopwatchTime: estimatedStopwatch,
+            focusTime: Math.max(0, focusTimeCs),
+            timestamp: now.toISOString(),
+            prayerTime: getPrayerTimePeriod(now.getHours()),
+            manual: true
+          };
+          setFocusHistory(prev => [...prev, newEntry]);
+          setTaskDescription('');
+          playCompletionSound();
+          alert('Focus session logged!');
+        }
+      }}
+      className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+      disabled={!taskDescription.trim()}
+    >
+      Log Focus Session
+    </button>
+  </div>
 
             <div className="flex justify-center gap-3">
               {!isTimerRunning ? (
