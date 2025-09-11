@@ -340,6 +340,7 @@ export default function StopwatchTimer() {
 
   
   // ISSUE 
+// Enhanced timer functions with accurate timing
 const startTimer = () => {
   if (timerTime === 0 && taskDescription.trim()) {
     const totalSeconds = timerMinutes * 60 + timerSeconds;
@@ -347,11 +348,15 @@ const startTimer = () => {
     setOriginalTimerTime(totalSeconds);
     setCurrentTask(taskDescription);
     setCurrentCategory(selectedCategory);
+  }
 
-    const targetTime = Date.now() + totalSeconds * 1000; // calculate target once
+  if (!isTimerRunning) {
+    const startTime = Date.now() - (originalTimerTime - timerTime) * 1000;
+    const endTime = startTime + originalTimerTime * 1000;
+    
     timerIntervalRef.current = setInterval(() => {
       const now = Date.now();
-      const remaining = Math.max(0, Math.round((targetTime - now) / 1000));
+      const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
       setTimerTime(remaining);
 
       if (remaining <= 0) {
@@ -359,11 +364,11 @@ const startTimer = () => {
         setIsTimerRunning(false);
         setIsTimerFinished(true);
 
-        const focusTimeCs = totalSeconds * 100 - stopwatchTime;
+        const focusTimeCs = originalTimerTime * 100 - stopwatchTime;
         const newEntry = {
-          task: taskDescription,
-          category: selectedCategory,
-          timerTime: totalSeconds,
+          task: currentTask,
+          category: currentCategory,
+          timerTime: originalTimerTime,
           stopwatchTime: stopwatchTime,
           focusTime: Math.max(0, focusTimeCs),
           timestamp: new Date().toISOString(),
@@ -372,7 +377,7 @@ const startTimer = () => {
         setFocusHistory(prev => [...prev, newEntry]);
         playCompletionSound();
       }
-    }, 200); // update 5 times per second
+    }, 100); // Update every 100ms for smoother display
   }
 
   setIsTimerRunning(true);
@@ -381,12 +386,16 @@ const startTimer = () => {
 
 const pauseTimer = () => {
   setIsTimerRunning(false);
-  clearInterval(timerIntervalRef.current);
+  if (timerIntervalRef.current) {
+    clearInterval(timerIntervalRef.current);
+  }
 };
 
 const resetTimer = () => {
   setIsTimerRunning(false);
-  clearInterval(timerIntervalRef.current);
+  if (timerIntervalRef.current) {
+    clearInterval(timerIntervalRef.current);
+  }
   setTimerTime(0);
   setOriginalTimerTime(0);
   setIsTimerFinished(false);
