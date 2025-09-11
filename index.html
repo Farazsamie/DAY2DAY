@@ -287,84 +287,157 @@
         }
 
         // Timer functions
-        function startTimer() {
-            const taskInput = document.getElementById('taskInput');
-            const categorySelect = document.getElementById('categorySelect');
-            const minutesInput = document.getElementById('timerMinutes');
-            const secondsInput = document.getElementById('timerSeconds');
-            
-            if (timerTime === 0 && taskInput.value.trim()) {
-                const totalSeconds = parseInt(minutesInput.value) * 60 + parseInt(secondsInput.value);
-                if (totalSeconds === 0) {
-                    alert('Please set a timer duration greater than 0');
-                    return;
-                }
-                timerTime = totalSeconds;
-                originalTimerTime = totalSeconds;
-                currentTask = taskInput.value;
-                currentCategory = categorySelect.value;
-                
-                // Show current task
-                const currentTaskDiv = document.getElementById('currentTask');
-                currentTaskDiv.innerHTML = `
-                    <div class="category-badge ${getCategoryClass(currentCategory)}">${currentCategory}</div>
-                    <div>Working on: ${currentTask}</div>
-                `;
-                currentTaskDiv.classList.remove('hidden');
-                
-                // Disable inputs
-                taskInput.disabled = true;
-                categorySelect.disabled = true;
-                minutesInput.disabled = true;
-                secondsInput.disabled = true;
-            }
-            
-            if (!taskInput.value.trim()) {
-                alert('Please enter a task description');
-                return;
-            }
-            
-            isTimerRunning = true;
-            isTimerFinished = false;
-            document.getElementById('timerStart').classList.add('hidden');
-            document.getElementById('timerPause').classList.remove('hidden');
-            document.getElementById('timerFinished').classList.add('hidden');
-            document.getElementById('timerDisplay').classList.remove('animate-pulse');
-            
-            timerInterval = setInterval(() => {
-                timerTime--;
-                document.getElementById('timerDisplay').textContent = formatTimerTime(timerTime);
-                
-                if (timerTime <= 0) {
-                    // Timer finished
-                    isTimerRunning = false;
-                    isTimerFinished = true;
-                    clearInterval(timerInterval);
-                    
-                    document.getElementById('timerStart').classList.remove('hidden');
-                    document.getElementById('timerPause').classList.add('hidden');
-                    document.getElementById('timerFinished').classList.remove('hidden');
-                    document.getElementById('timerDisplay').classList.add('animate-pulse');
-                    
-                    // Calculate focus time
-                    const focusTimeCs = originalTimerTime * 100 - stopwatchTime;
-                    const now = new Date();
-                    const newEntry = {
-                        task: currentTask,
-                        category: currentCategory,
-                        timerTime: originalTimerTime,
-                        stopwatchTime: stopwatchTime,
-                        focusTime: Math.max(0, focusTimeCs),
-                        timestamp: now.toISOString(),
-                        prayerTime: getPrayerTimePeriod(now.getHours())
-                    };
-                    focusHistory.push(newEntry);
-                    
-                    playCompletionSound();
-                    renderHistory();
-                }
-            }, 1000);
+        // Timer functions - REPLACE the existing timer functions with these
+let timerStartTime = null;
+let timerPausedTime = 0;
+
+function startTimer() {
+    const taskInput = document.getElementById('taskInput');
+    const categorySelect = document.getElementById('categorySelect');
+    const minutesInput = document.getElementById('timerMinutes');
+    const secondsInput = document.getElementById('timerSeconds');
+    
+    if (timerTime === 0 && taskInput.value.trim()) {
+        const totalSeconds = parseInt(minutesInput.value) * 60 + parseInt(secondsInput.value);
+        if (totalSeconds === 0) {
+            alert('Please set a timer duration greater than 0');
+            return;
         }
+        timerTime = totalSeconds;
+        originalTimerTime = totalSeconds;
+        currentTask = taskInput.value;
+        currentCategory = categorySelect.value;
+        timerPausedTime = 0;
+        
+        // Show current task
+        const currentTaskDiv = document.getElementById('currentTask');
+        currentTaskDiv.innerHTML = `
+            <div class="category-badge ${getCategoryClass(currentCategory)}">${currentCategory}</div>
+            <div>Working on: ${currentTask}</div>
+        `;
+        currentTaskDiv.classList.remove('hidden');
+        
+        // Disable inputs
+        taskInput.disabled = true;
+        categorySelect.disabled = true;
+        minutesInput.disabled = true;
+        secondsInput.disabled = true;
+    }
+    
+    if (!taskInput.value.trim()) {
+        alert('Please enter a task description');
+        return;
+    }
+    
+    // Start timing from current moment
+    timerStartTime = Date.now();
+    
+    isTimerRunning = true;
+    isTimerFinished = false;
+    document.getElementById('timerStart').classList.add('hidden');
+    document.getElementById('timerPause').classList.remove('hidden');
+    document.getElementById('timerFinished').classList.add('hidden');
+    document.getElementById('timerDisplay').classList.remove('animate-pulse');
+    
+    timerInterval = setInterval(() => {
+        const now = Date.now();
+        const elapsed = Math.floor((now - timerStartTime + timerPausedTime) / 1000);
+        const remaining = Math.max(0, originalTimerTime - elapsed);
+        
+        timerTime = remaining;
+        document.getElementById('timerDisplay').textContent = formatTimerTime(remaining);
+        
+        if (remaining <= 0) {
+            // Timer finished
+            isTimerRunning = false;
+            isTimerFinished = true;
+            clearInterval(timerInterval);
+            
+            document.getElementById('timerStart').classList.remove('hidden');
+            document.getElementById('timerPause').classList.add('hidden');
+            document.getElementById('timerFinished').classList.remove('hidden');
+            document.getElementById('timerDisplay').classList.add('animate-pulse');
+            
+            // Calculate focus time
+            const focusTimeCs = originalTimerTime * 100 - stopwatchTime;
+            const now = new Date();
+            const newEntry = {
+                task: currentTask,
+                category: currentCategory,
+                timerTime: originalTimerTime,
+                stopwatchTime: stopwatchTime,
+                focusTime: Math.max(0, focusTimeCs),
+                timestamp: now.toISOString(),
+                prayerTime: getPrayerTimePeriod(now.getHours())
+            };
+            focusHistory.push(newEntry);
+            
+            playCompletionSound();
+            renderHistory();
+        }
+    }, 100); // Update every 100ms for smoother display
+}
+
+function pauseTimer() {
+    if (isTimerRunning && timerStartTime) {
+        // Calculate how much time has passed
+        const now = Date.now();
+        timerPausedTime += now - timerStartTime;
+    }
+    
+    isTimerRunning = false;
+    document.getElementById('timerStart').classList.remove('hidden');
+    document.getElementById('timerPause').classList.add('hidden');
+    clearInterval(timerInterval);
+}
+
+function resetTimer() {
+    isTimerRunning = false;
+    timerTime = 0;
+    originalTimerTime = 0;
+    isTimerFinished = false;
+    currentTask = '';
+    currentCategory = '';
+    timerStartTime = null;
+    timerPausedTime = 0;
+    
+    document.getElementById('timerStart').classList.remove('hidden');
+    document.getElementById('timerPause').classList.add('hidden');
+    document.getElementById('timerFinished').classList.add('hidden');
+    document.getElementById('timerDisplay').classList.remove('animate-pulse');
+    document.getElementById('timerDisplay').textContent = '00:00';
+    document.getElementById('currentTask').classList.add('hidden');
+    
+    // Enable inputs
+    document.getElementById('taskInput').disabled = false;
+    document.getElementById('categorySelect').disabled = false;
+    document.getElementById('timerMinutes').disabled = false;
+    document.getElementById('timerSeconds').disabled = false;
+    
+    clearInterval(timerInterval);
+}
+
+// Add the doneTimer function that was referenced in HTML but missing
+function doneTimer() {
+    if (isTimerRunning || timerTime > 0) {
+        const focusTimeCs = (originalTimerTime - timerTime) * 100 - stopwatchTime;
+        const now = new Date();
+        const newEntry = {
+            task: currentTask,
+            category: currentCategory,
+            timerTime: originalTimerTime,
+            stopwatchTime: stopwatchTime,
+            focusTime: Math.max(0, focusTimeCs),
+            timestamp: now.toISOString(),
+            prayerTime: getPrayerTimePeriod(now.getHours()),
+            completed: true
+        };
+        focusHistory.push(newEntry);
+        resetTimer();
+        playCompletionSound();
+        renderHistory();
+    }
+}
 
         function pauseTimer() {
             isTimerRunning = false;
