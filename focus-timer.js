@@ -40,6 +40,18 @@ export default function StopwatchTimer() {
   const [expandedDays, setExpandedDays] = useState({});
   const [expandedPrayerTimes, setExpandedPrayerTimes] = useState({});
 
+  // Timer state (added to ensure accurate timing)
+  const [timerMinutes, setTimerMinutes] = useState(25);
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [timerTime, setTimerTime] = useState(0); // remaining seconds
+  const [originalTimerTime, setOriginalTimerTime] = useState(0); // seconds originally set
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [isTimerFinished, setIsTimerFinished] = useState(false);
+  const timerIntervalRef = useRef(null);
+  const timerEndRef = useRef(null);
+  const [taskDescription, setTaskDescription] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(categories[0]);
+
   // View state
   const [currentView, setCurrentView] = useState('timer'); // 'timer' or 'timebox'
 
@@ -328,35 +340,42 @@ export default function StopwatchTimer() {
   };
 
   
-  // ISSUE 
-// Enhanced timer functions with accurate timing
-const startTimer = () => {
-  if (timerTime === 0 && taskDescription.trim()) {
-    const totalSeconds = timerMinutes * 60 + timerSeconds;
-    setTimerTime(totalSeconds);
-    setOriginalTimerTime(totalSeconds);
-    setCurrentTask(taskDescription);
-    setCurrentCategory(selectedCategory);
-  }
+  // ISSUE
+  // Robust timer functions using an absolute end time to avoid drift
+  const startTimer = () => {
+    // If timer hasn't been set yet, initialize from minutes/seconds inputs
+    if ((timerTime === 0 || timerTime == null) && taskDescription.trim()) {
+      const totalSeconds = Math.max(0, Math.floor(timerMinutes) * 60 + Math.floor(timerSeconds));
+      setTimerTime(totalSeconds);
+      setOriginalTimerTime(totalSeconds);
+    }
 
-  if (!isTimerRunning) {
-    const startTime = Date.now() - (originalTimerTime - timerTime) * 1000;
-    const endTime = startTime + originalTimerTime * 1000;
-    
+    // If already running, do nothing
+    if (isTimerRunning) return;
+
+    // Set end timestamp based on remaining seconds
+    const now = Date.now();
+    const remaining = timerTime > 0 ? timerTime : (Math.max(0, Math.floor(timerMinutes) * 60 + Math.floor(timerSeconds)));
+    timerEndRef.current = now + remaining * 1000;
+
+    // Clear any previous interval
+    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+
     timerIntervalRef.current = setInterval(() => {
-      const now = Date.now();
-      const remaining = Math.max(0, Math.ceil((endTime - now) / 1000));
-      setTimerTime(remaining);
+      const msLeft = Math.max(0, timerEndRef.current - Date.now());
+      const secsLeft = Math.ceil(msLeft / 1000);
+      setTimerTime(secsLeft);
 
-      if (remaining <= 0) {
+      if (msLeft <= 0) {
         clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
         setIsTimerRunning(false);
         setIsTimerFinished(true);
 
         const focusTimeCs = originalTimerTime * 100 - stopwatchTime;
         const newEntry = {
-          task: currentTask,
-          category: currentCategory,
+          task: taskDescription,
+          category: selectedCategory,
           timerTime: originalTimerTime,
           stopwatchTime: stopwatchTime,
           focusTime: Math.max(0, focusTimeCs),
@@ -366,32 +385,39 @@ const startTimer = () => {
         setFocusHistory(prev => [...prev, newEntry]);
         playCompletionSound();
       }
-    }, 100); // Update every 100ms for smoother display
-  }
+    }, 250); // 250ms updates are enough and cheaper
 
-  setIsTimerRunning(true);
-  setIsTimerFinished(false);
-};
+    setIsTimerRunning(true);
+    setIsTimerFinished(false);
+  };
 
-const pauseTimer = () => {
-  setIsTimerRunning(false);
-  if (timerIntervalRef.current) {
-    clearInterval(timerIntervalRef.current);
-  }
-};
+  const pauseTimer = () => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+    // compute remaining seconds based on end ref
+    if (timerEndRef.current) {
+      const msLeft = Math.max(0, timerEndRef.current - Date.now());
+      setTimerTime(Math.ceil(msLeft / 1000));
+    }
+    setIsTimerRunning(false);
+  };
 
-const resetTimer = () => {
-  setIsTimerRunning(false);
-  if (timerIntervalRef.current) {
-    clearInterval(timerIntervalRef.current);
-  }
-  setTimerTime(0);
-  setOriginalTimerTime(0);
-  setIsTimerFinished(false);
-  setCurrentTask('');
-  setCurrentCategory('');
-};
-// ISSUE END
+  const resetTimer = () => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+    timerEndRef.current = null;
+    setTimerTime(0);
+    setOriginalTimerTime(0);
+    setIsTimerRunning(false);
+    setIsTimerFinished(false);
+    setTaskDescription('');
+    setSelectedCategory(categories[0]);
+  };
+  // ISSUE END
 
 
   const groupedHistory = groupFocusHistory();
@@ -412,50 +438,41 @@ const resetTimer = () => {
 
   if (currentView === 'timebox') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Navigation */}
-          <div className="flex justify-between items-center mb-8">
-            <button
-              onClick={() => setCurrentView('timer')}
-              className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg shadow-md transition-colors"
-            >
-              <Clock size={20} />
-              Back to Timer
-            </button>
-            <h1 className="text-4xl font-bold text-gray-800">Today's Time Box</h1>
-            <div></div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <div className="max-w-full mx-auto">
+          {/* Navigation: title only (Back button removed) */}
+          <div className="flex justify-center items-center mb-6">
+            <h1 className="text-3xl font-bold text-gray-800">Today's Time Box</h1>
           </div>
 
           {/* Time Box Grid */}
-          {/* Time Box Grid */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <div className="grid grid-cols-1 gap-2">
-                    {timeSlots.map((slot, index) => {
-                      const sessions = getSessionsForTimeSlot(slot);
-                      const hasSession = sessions.length > 0;
-                      
-                      return (
-                        <div
-                          key={index}
-                          className={`p-4 border border-gray-200 min-h-16 text-sm ${
-                            hasSession ? 'bg-green-50' : 'bg-gray-50'
-                          }`}
-                        >
-                    <div className="font-semibold text-gray-700 mb-2">
+          <div className="bg-white rounded-xl shadow-lg p-6 overflow-x-auto max-w-full">
+            <div className="grid grid-cols-1 gap-2 w-full">
+              {timeSlots.map((slot, index) => {
+                const sessions = getSessionsForTimeSlot(slot);
+                const hasSession = sessions.length > 0;
+                
+                return (
+                  <div
+                    key={index}
+                    className={`p-6 border border-gray-200 min-h-20 text-sm w-full ${
+                      hasSession ? 'bg-green-50' : 'bg-gray-50'
+                    }`}
+                  >
+                    <div className="font-semibold text-gray-700 mb-1">
                       {slot.start} - {slot.end}
                     </div>
                     <div className="text-xs text-gray-500 mb-2">{slot.prayerTime}</div>
                     
                     {sessions.map((session, sessionIndex) => (
-                      <div key={sessionIndex} className="mb-2">
-                        <div className={`inline-block px-1 py-0.5 rounded text-xs mb-1 ${getCategoryColor(session.category)}`}>
+                      <div key={sessionIndex} className="mb-3">
+                        <div className={`block px-3 py-1 rounded text-xs mb-1 ${getCategoryColor(session.category)}`}>
                           {session.category}
                         </div>
-                        <div className="text-xs text-gray-600 truncate" title={session.task}>
+                        <div className="text-sm text-gray-600" title={session.task}>
                           {session.task}
                         </div>
-                        <div className="text-xs text-green-600 font-semibold">
+                        <div className="text-xs text-green-600 font-semibold mt-1">
                           Focus: {formatFocusTime(session.focusTime)}
                         </div>
                       </div>
@@ -471,7 +488,7 @@ const resetTimer = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-7xl mx-auto">
         {/* Countdown Timers */}
         <div className="absolute top-4 left-4 space-y-3">
@@ -538,7 +555,7 @@ const resetTimer = () => {
           </button>
         </div>
 
-        <h1 className="text-4xl font-bold text-center text-gray-800 mb-8 mt-12">Stopwatch & Timer</h1>
+        <h1 className="text-4xl font-bold text-center text-gray-800 mb-8 mt-6">Stopwatch & Timer</h1>
         
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Stopwatch */}
@@ -553,7 +570,7 @@ const resetTimer = () => {
               <div className="text-xs text-gray-400 mt-2">Unfocused Time</div>
             </div>
 
-            <div className="flex justify-center gap-3">
+            <div className="flex justify-center items-center gap-3">
               {!isStopwatchRunning ? (
                 <button
                   onClick={startStopwatch}
@@ -689,7 +706,7 @@ const resetTimer = () => {
     </button>
   </div>
 
-            <div className="flex justify-center gap-3">
+            <div className="flex justify-center items-center gap-3">
               {!isTimerRunning ? (
                 <button
                   onClick={startTimer}
@@ -763,12 +780,12 @@ const resetTimer = () => {
                               {expandedPrayerTimes[`${day}-${prayerTime}`] && (
                                 <div className="mt-2 space-y-2">
                                   {entries.map((entry, index) => (
-                                    <div key={index} className="bg-gray-50 rounded-lg p-3 border-l-4 border-purple-500 ml-4">
-                                      <div className="flex items-center gap-2 mb-2">
-                                        <span className={`px-2 py-1 rounded text-xs ${getCategoryColor(entry.category)}`}>
+                                    <div key={index} className="bg-gray-50 rounded-lg p-4 border-l-4 border-purple-500 ml-4">
+                                      <div className="mb-2">
+                                        <div className={`block px-2 py-1 rounded text-xs mb-1 ${getCategoryColor(entry.category)}`}>
                                           {entry.category}
-                                        </span>
-                                        <span className="font-medium text-gray-800 text-sm">{entry.task}</span>
+                                        </div>
+                                        <div className="font-medium text-gray-800 text-sm">{entry.task}</div>
                                       </div>
                                       <div className="grid grid-cols-3 gap-2 text-xs">
                                         <div>
