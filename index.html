@@ -13,20 +13,20 @@
     <div class="countdown-wrapper">
         <div class="countdown-box" id="countApr3">
             <div class="countdown-label">APRIL 3RD, 2026</div>
-            <div class="countdown-time" id="countdown1">Loading...</div>
+            <div class="countdown-time" id="countdown1">Loading..</div>
         </div>
 
         <div class="countdown-box" id="countNextMonth">
             <div class="countdown-label">3RD OF NEXT MONTH</div>
-            <div class="countdown-time" id="countdown2">Loading...</div>
+            <div class="countdown-time" id="countdown2">Loading..</div>
         </div>
     </div>
 
     <!-- BOTTOM LEFT BUTTONS -->
     <div class="controls-wrapper">
         <button class="btn btn-green" onclick="exportToExcel()">Excel</button>
-        <button class="btn btn-indigo" onclick="switchToTimebox()">TimeBox</button>
-        <button class="btn btn-red" onclick="clearAllData()">Clear All</button>
+        <button class="btn btn-indigo" onclick="switchToTimebox()">Time Boxing</button>
+        <button class="btn btn-red" onclick="clearAllData()">Clear</button>
     </div>
 
 
@@ -38,34 +38,34 @@
 
             <!-- STOPWATCH -->
             <div class="card">
-                <h2 class="card-title">Unproductivity Time</h2>
+                <h2 class="card-title">Break Time</h2>
 
                 <div class="time-display">
                     <div class="time-main" id="stopwatchDisplay">00:00.00</div>
                 </div>
 
                 <div class="button-group">
-                    <button id="stopwatchStart" class="btn btn-green" onclick="startStopwatch()">▶ start</button>
-                    <button id="stopwatchPause" class="btn btn-yellow hidden" onclick="pauseStopwatch()">⏸ pause</button>
+                    <button id="stopwatchStart" class="btn btn-green" onclick="startStopwatch()"> start</button>
+                    <button id="stopwatchPause" class="btn btn-yellow hidden" onclick="pauseStopwatch()"> pause</button>
                     <button class="btn btn-gray" onclick="resetStopwatch()">reset</button>
                 </div>
             </div>
 
             <!-- TIMER -->
             <div class="card">
-                <h2 class="card-title">Deep Work Time</h2>
+                <h2 class="card-title">Deep Focus</h2>
 
-                <label class="form-label">Categorize</label>
+                <label class="form-label">Category</label>
                 <select id="categorySelect">
-                    <option value="Islam">Islam</option>
-                    <option value="Career">Career</option>
-                    <option value="Physical">Physical Health</option>
-                    <option value="Personal Assets">Personal Assets</option>
-                    <option value="Interests">Interests</option>
+                    <option value="ISLAM">Islam</option>
+                    <option value="CAREER">Career</option>
+                    <option value="HEALTH">Health</option>
+                    <option value="ASSETS">Assets</option>
+                    <option value="INTERESTS">Interests</option>
                 </select>
 
                 <label class="form-label">Description</label>
-                <input type="text" id="taskInput" placeholder="Task Description">
+                <input type="text" id="taskInput" placeholder=" Insert">
 
                 <div class="time-display">
                     <div class="time-main" id="timerDisplay">00:00</div>
@@ -83,8 +83,8 @@
                 </div>
 
                 <div class="button-group">
-                    <button id="timerStart" class="btn btn-green" onclick="startTimer()">▶ start</button>
-                    <button id="timerPause" class="btn btn-yellow hidden" onclick="pauseTimer()">⏸ pause</button>
+                    <button id="timerStart" class="btn btn-green" onclick="startTimer()"> start</button>
+                    <button id="timerPause" class="btn btn-yellow hidden" onclick="pauseTimer()"> pause</button>
                     <button class="btn btn-gray" onclick="resetTimer()">reset</button>
                     <button class="btn btn-blue" onclick="doneTimer()">done</button>
                 </div>
@@ -92,7 +92,7 @@
 
             <!-- FOCUS HISTORY -->
             <div class="card">
-                <h2 class="card-title">Focus History</h2>
+                <h2 class="card-title"> History</h2>
                 <div id="historyContainer" class="history-container"></div>
             </div>
 
@@ -102,8 +102,7 @@
 
     <!-- TIMEBOX VIEW -->
     <div id="timeboxView" class="hidden container">
-        <button class="btn btn-gray" onclick="switchToTimer()">Back to Timer</button>
-        <h1>Today's Time Box</h1>
+        <h1>Time Boxing</h1>
         <div id="timeSlotsContainer"></div>
     </div>
 
@@ -367,7 +366,7 @@ function togglePrayerTimeExpansion(day,pt){
 function renderHistory(){
     const cont=document.getElementById('historyContainer');
     if(focusHistory.length===0){
-        cont.innerHTML="<p>No focus sessions yet.</p>";
+        cont.innerHTML="<p>No Current Inputs</p>";
         return;
     }
 

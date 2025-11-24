@@ -8,14 +8,15 @@
 /* BASE COLORS */
 :root {
     --dark-bg: #1b1a1a;     /* main background */
-    --card-bg: #322d2a;     /* card + button background */
+    --card-bg: #312d2a;     /* card + button background */
     --accent-gray: #656565; /* secondary dark gray */
     --text-light: #f3f4f6;  /* universal light text */
 }
 
 /* BODY */
 body {
-    font-family: sans-serif;
+    font-family: "Trebuchet MS", sans-serif;
+    /*font-family: "Palatino Linotype", Palatino, serif;*/
     min-height: 100vh;
     background: var(--dark-bg);
     padding: 1.5rem;
@@ -83,18 +84,26 @@ body, h1, h2, h3, h4, h5, h6, p, div, button, label {
 .btn {
     background: var(--card-bg);
     color: var(--text-light) !important;
-    padding: 10px 14px;
-    border-radius: 6px;
-    border: 1px solid var(--accent-gray);
+    padding: 5px 20px;
+    border-radius: 1.5px;
+    border: 0.5px solid var(--accent-gray);
     cursor: pointer;
-    transition: 0.2s;
-    font-size: 0.875rem;
-    font-weight: 600;
+    transition: 0.1s;
+    font-size: 0.75rem;
+    font-weight: 200;
+    font-style: italic;
 }
 
 .btn:hover {
     background: var(--accent-gray);
     transform: translateY(-1px);
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 5px;
 }
 
 /* ---------------------------------------------
@@ -105,15 +114,15 @@ body, h1, h2, h3, h4, h5, h6, p, div, button, label {
     flex-direction: row;     
     justify-content: space-between;
     gap: 2rem;
-    margin-top: 2rem;
+    margin-top: 1rem;
 }
 
 /* CARD */
 .card {
     background: var(--card-bg);
-    padding: 2rem;
-    border-radius: 10px;
-    flex: 1;
+    padding: 1.25rem;
+    border-radius: 5px;
+    flex: 0.5;
 }
 
 /* CARD TITLE */
@@ -150,15 +159,16 @@ body, h1, h2, h3, h4, h5, h6, p, div, button, label {
 .form-label {
     font-size: 0.875rem;
     font-weight: 500;
-    margin-bottom: 0.25rem;
+    margin-bottom: 10rem;
     color: var(--text-light);
+    justify-content: center;
 }
 
 .form-input, .form-select {
     width: 100%;
-    padding: 0.75rem;
+    padding: 1rem;
     background: #2d2d2d;
-    border: 1px solid #555;
+    border: 1px solid #1d1c1c;
     color: var(--text-light);
 }
 
@@ -265,10 +275,6 @@ body, h1, h2, h3, h4, h5, h6, p, div, button, label {
     color: var(--text-light);
 }
 
-.time-slot {
-    background: #2f2f2f;
-    border: 1px solid #555;
-}
 
 /* ---------------------------------------------
    RESPONSIVE
