@@ -270,7 +270,7 @@ body, h1, h2, h3, h4, h5, h6, p, div, button, label {
    TIMEBOX VIEW
 ---------------------------------------------- */
 .timebox-view {
-    padding: 1.5rem;
+    padding: 2rem;
     background: #222;
     color: var(--text-light);
 }
