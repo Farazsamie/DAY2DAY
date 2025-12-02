@@ -44,6 +44,11 @@
                     <div class="time-main" id="stopwatchDisplay">00:00.00</div>
                 </div>
 
+                <div style="text-align:center;margin-bottom:1rem;">
+                    <label class="form-label">Break Activity</label>
+                    <input type="text" id="breakInput" placeholder=" Insert" style="width:100%;padding:0.5rem;background:#1f2937;color:#f3f4f6;border:1px solid #374151;border-radius:4px;margin-top:0.5rem;">
+                </div>
+
                 <div class="button-group">
                     <button id="stopwatchStart" class="btn btn-green" onclick="startStopwatch()"> start</button>
                     <button id="stopwatchPause" class="btn btn-yellow hidden" onclick="pauseStopwatch()"> pause</button>
@@ -86,8 +91,11 @@
                     <button id="timerStart" class="btn btn-green" onclick="startTimer()"> start</button>
                     <button id="timerPause" class="btn btn-yellow hidden" onclick="pauseTimer()"> pause</button>
                     <button class="btn btn-gray" onclick="resetTimer()">reset</button>
-                    <button class="btn btn-blue" onclick="doneTimer()">done</button>
-                    <button class="btn btn-indigo" onclick="completeTask()">completed</button>
+                </div>
+                
+                <div class="button-group" style="display:flex;gap:8px;margin-top:12px;align-items:center;">
+                    <input type="number" id="taskRating" min="0" max="10" placeholder="Rate 0-10" style="flex:1;padding:8px;background:#312D2A;color:#EBE0D7;border:1px solid #374151;border-radius:4px;">
+                    <button class="btn" style="background:#312D2A;color:#EBE0D7;flex:0 0 120px;border:1px solid #374151;" onclick="completeTask()">completed</button>
                 </div>
             </div>
 
@@ -96,8 +104,8 @@
                 <h2 class="card-title"> History</h2>
                 
                 <!-- Timeline Graph -->
-                <div id="timelineGraph" style="margin-bottom: 20px;">
-                    <canvas id="timelineCanvas" width="600" height="200" style="width: 100%; max-width: 600px; border: 1px solid #374151;"></canvas>
+                <div style="margin-bottom: 20px;">
+                    <canvas id="timelineCanvas" width="800" height="300" style="width: 100%; max-width: 800px; border:none;"></canvas>
                 </div>
                 
                 <div id="historyContainer" class="history-container"></div>
@@ -276,22 +284,8 @@ function startTimer(){
             clearInterval(timerInterval);
             isTimerRunning=false;
             isTimerFinished=true;
-
-            const focusCS = originalTimerTime*100 - stopwatchTime;
-            const nowObj = new Date();
-
-            focusHistory.push({
-                task: currentTask,
-                category: currentCategory,
-                timerTime: originalTimerTime,
-                stopwatchTime,
-                focusTime: Math.max(0, focusCS),
-                timestamp: nowObj.toISOString(),
-                prayerTime: getPrayerTimePeriod(nowObj.getHours())
-            });
-
+            document.getElementById('timerFinished').classList.remove('hidden');
             playCompletionSound();
-            renderHistory();
         }
     },100);
 }
@@ -319,6 +313,7 @@ function resetTimer(){
     document.getElementById('timerPause').classList.add('hidden');
     document.getElementById('timerDisplay').textContent='00:00';
     document.getElementById('currentTask').classList.add('hidden');
+    document.getElementById('timerFinished').classList.add('hidden');
 
     ['taskInput','categorySelect','timerMinutes','timerSeconds']
     .forEach(id=>document.getElementById(id).disabled=false);
@@ -326,71 +321,38 @@ function resetTimer(){
     clearInterval(timerInterval);
 }
 
-function doneTimer(){
-    if(isTimerRunning || timerTime>0){
-        const focusCS = (originalTimerTime - timerTime)*100 - stopwatchTime;
-        const nowObj = new Date();
-
-        focusHistory.push({
-            task: currentTask,
-            category: currentCategory,
-            timerTime: originalTimerTime,
-            stopwatchTime,
-            focusTime: Math.max(0, focusCS),
-            timestamp: nowObj.toISOString(),
-            prayerTime: getPrayerTimePeriod(nowObj.getHours()),
-            completed: true
-        });
-
-        resetTimer();
-        playCompletionSound();
-        renderHistory();
-    }
-}
-
-/* NEW FUNCTION: COMPLETE TASK */
+/* COMPLETE TASK */
 function completeTask(){
     const taskName = document.getElementById('taskInput').value.trim();
+    const rating = parseInt(document.getElementById('taskRating').value);
     
     if(!taskName){
         alert("Enter a task name to mark as completed");
         return;
     }
     
-    // Find all sessions with matching task name
-    const matchingSessions = focusHistory.filter(entry => 
-        entry.task.toLowerCase() === taskName.toLowerCase()
-    );
-    
-    if(matchingSessions.length === 0){
-        alert(`No previous sessions found for task: "${taskName}"`);
+    if(isNaN(rating) || rating < 0 || rating > 10){
+        alert("Please enter a rating between 0 and 10");
         return;
     }
     
-    // Calculate total time spent
-    const totalFocusTime = matchingSessions.reduce((sum, entry) => sum + entry.focusTime, 0);
-    const totalTimerTime = matchingSessions.reduce((sum, entry) => sum + entry.timerTime, 0);
-    const totalStopwatchTime = matchingSessions.reduce((sum, entry) => sum + entry.stopwatchTime, 0);
-    
-    // Show summary
-    const message = `Task Completed: "${taskName}"
-    
-Sessions: ${matchingSessions.length}
-Total Focus Time: ${formatFocusTime(totalFocusTime)}
-Total Timer Time: ${formatTimerTime(totalTimerTime)}
-Total Break Time: ${formatFocusTime(totalStopwatchTime)}`;
-    
-    alert(message);
-    
-    // Mark all matching sessions as completed
-    focusHistory = focusHistory.map(entry => {
-        if(entry.task.toLowerCase() === taskName.toLowerCase()){
-            return {...entry, taskCompleted: true};
-        }
-        return entry;
+    const focusCS = (originalTimerTime - timerTime)*100 - stopwatchTime;
+    const nowObj = new Date();
+
+    focusHistory.push({
+        task: currentTask || taskName,
+        category: currentCategory || document.getElementById('categorySelect').value,
+        timerTime: originalTimerTime,
+        stopwatchTime,
+        focusTime: Math.max(0, focusCS),
+        timestamp: nowObj.toISOString(),
+        prayerTime: getPrayerTimePeriod(nowObj.getHours()),
+        rating: rating,
+        taskCompleted: true
     });
-    
-    // Reset current timer
+
+    playCompletionSound();
+    document.getElementById('taskRating').value = '';
     resetTimer();
     renderHistory();
 }
@@ -447,93 +409,88 @@ function drawTimelineGraph(){
     const width = canvas.width;
     const height = canvas.height;
     
-    // Clear canvas - match dark-bg
-    ctx.fillStyle = '#1b1a1a';
+    // Clear canvas - custom color
+    ctx.fillStyle = '#312D2A';
     ctx.fillRect(0, 0, width, height);
     
-    // Get today's sessions
+    // Get today's sessions with ratings
     const today = new Date().toDateString();
     const todaySessions = focusHistory.filter(e => 
-        new Date(e.timestamp).toDateString() === today
-    );
+        new Date(e.timestamp).toDateString() === today && e.rating !== undefined
+    ).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
     
     if(todaySessions.length === 0){
-        ctx.fillStyle = '#656565';
+        ctx.fillStyle = '#EBE0D7';
         ctx.font = '14px Trebuchet MS';
         ctx.textAlign = 'center';
         ctx.fillText('No sessions today', width/2, height/2);
         return;
     }
     
-    // Draw grid lines and labels - match accent-gray
-    ctx.strokeStyle = '#656565';
-    ctx.fillStyle = '#f3f4f6';
-    ctx.font = '10px Trebuchet MS';
+    // Draw labels
+    ctx.strokeStyle = '#EBE0D7';
+    ctx.fillStyle = '#EBE0D7';
+    ctx.font = '11px Trebuchet MS';
     
-    // Vertical grid lines (hours)
-    for(let hour = 0; hour <= 24; hour += 3){
-        const x = (hour / 24) * width;
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, height - 20);
-        ctx.stroke();
+    const padding = 40;
+    const graphWidth = width - padding * 2;
+    const graphHeight = height - padding * 2;
+    
+    // Vertical time labels (every hour)
+    ctx.textAlign = 'center';
+    for(let hour = 0; hour <= 24; hour++){
+        const x = padding + (hour / 24) * graphWidth;
         
-        ctx.fillText(`${hour}:00`, x - 15, height - 5);
+        // Format time in 12-hour format
+        let displayHour = hour % 12;
+        if(displayHour === 0) displayHour = 12;
+        const ampm = hour < 12 ? 'AM' : 'PM';
+        
+        ctx.fillText(`${displayHour}${ampm}`, x, height - 10);
     }
     
-    // Horizontal grid lines
-    for(let i = 0; i <= 4; i++){
-        const y = (i / 4) * (height - 20);
+    // Y-axis labels (ratings 0-10)
+    ctx.textAlign = 'right';
+    for(let i = 0; i <= 10; i++){
+        const y = padding + graphHeight - ((i / 10) * graphHeight);
+        ctx.fillText(i.toString(), padding - 10, y + 4);
+    }
+    
+    // Draw line connecting dots
+    if(todaySessions.length > 1){
         ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(width, y);
+        ctx.strokeStyle = '#EBE0D7';
+        ctx.lineWidth = 2;
+        
+        todaySessions.forEach((session, index) => {
+            const sessionDate = new Date(session.timestamp);
+            const startHour = sessionDate.getHours() + sessionDate.getMinutes() / 60;
+            
+            const x = padding + (startHour / 24) * graphWidth;
+            const y = padding + graphHeight - ((session.rating / 10) * graphHeight);
+            
+            if(index === 0){
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        });
+        
         ctx.stroke();
     }
     
-    // Category colors - match your theme
-    const categoryColors = {
-        'ISLAM': '#656565',
-        'CAREER': '#656565',
-        'HEALTH': '#656565',
-        'ASSETS': '#656565',
-        'INTERESTS': '#656565'
-    };
-    
-    // Draw session bars
+    // Draw dots for each session
     todaySessions.forEach(session => {
         const sessionDate = new Date(session.timestamp);
         const startHour = sessionDate.getHours() + sessionDate.getMinutes() / 60;
-        const durationHours = session.timerTime / 3600;
         
-        const x = (startHour / 24) * width;
-        const barWidth = Math.max(2, (durationHours / 24) * width);
-        const barHeight = 30;
-        const y = height - 20 - barHeight - 10;
+        const x = padding + (startHour / 24) * graphWidth;
+        const y = padding + graphHeight - ((session.rating / 10) * graphHeight);
         
-        ctx.fillStyle = categoryColors[session.category] || '#656565';
-        ctx.fillRect(x, y, barWidth, barHeight);
-        
-        // Add task label if there's space
-        if(barWidth > 40){
-            ctx.fillStyle = '#f3f4f6';
-            ctx.font = 'bold 9px Trebuchet MS';
-            ctx.textAlign = 'left';
-            ctx.fillText(session.task.substring(0, 10), x + 2, y + 15);
-        }
-    });
-    
-    // Draw legend
-    ctx.textAlign = 'left';
-    let legendX = 10;
-    let legendY = 15;
-    
-    Object.entries(categoryColors).forEach(([cat, color]) => {
-        ctx.fillStyle = color;
-        ctx.fillRect(legendX, legendY - 8, 12, 12);
-        ctx.fillStyle = '#f3f4f6';
-        ctx.font = '10px Trebuchet MS';
-        ctx.fillText(cat, legendX + 16, legendY);
-        legendX += 80;
+        ctx.fillStyle = '#EBE0D7';
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fill();
     });
 }
 
@@ -558,7 +515,7 @@ function renderHistory(){
         const exp = expandedDays[day];
         html += `
             <div class="day-group">
-                <button onclick="toggleDayExpansion('${day}')" class="btn btn-gray">${day}</button>
+                <button onclick="toggleDayExpansion('${day}')" class="btn btn-gray" style="border:none;background:#312D2A;color:#EBE0D7;">${day}</button>
         `;
 
         if(exp){
@@ -569,7 +526,7 @@ function renderHistory(){
 
                 html += `
                     <div style="margin:10px 0;">
-                        <button onclick="togglePrayerTimeExpansion('${day}','${pt}')" class="btn btn-blue">
+                        <button onclick="togglePrayerTimeExpansion('${day}','${pt}')" class="btn" style="background:#312D2A;color:#EBE0D7;">
                             ${pt} (${entries.length}) — Focus: ${formatFocusTime(totals.focusTime)}
                         </button>
                 `;
@@ -577,13 +534,14 @@ function renderHistory(){
                 if(exp2){
                     entries.forEach(e=>{
                         const completedBadge = e.taskCompleted ? ' ✓ COMPLETED' : '';
+                        const ratingDisplay = e.rating !== undefined ? ` | Rating: ${e.rating}/10` : '';
                         html += `
                             <div style="margin:6px 0; padding:8px; background:#1f2937;">
                                 <span class="category-badge ${getCategoryClass(e.category)}">${e.category}</span>
                                 <strong>${e.task}</strong>${completedBadge}<br>
                                 Timer: ${formatTimerTime(e.timerTime)} |
                                 Focus: ${formatFocusTime(e.focusTime)} |
-                                Unfocus: ${formatFocusTime(e.stopwatchTime)}<br>
+                                Unfocus: ${formatFocusTime(e.stopwatchTime)}${ratingDisplay}<br>
                                 <small>${new Date(e.timestamp).toLocaleTimeString()}</small>
                             </div>
                         `;
@@ -611,6 +569,7 @@ function exportToExcel(){
         Timer_Seconds: e.timerTime,
         Unfocused_CS: e.stopwatchTime,
         Focus_CS: e.focusTime,
+        Rating: e.rating !== undefined ? e.rating : '',
         Task_Completed: e.taskCompleted ? 'YES' : 'NO'
     }));
     const sheet = XLSX.utils.json_to_sheet(data);
