@@ -68,16 +68,9 @@ body, h1, h2, h3, h4, h5, h6, p, div, button, label {
     color: var(--text-light);
 }
 
-/* ---------------------------------------------
-   CONTROLS — BOTTOM LEFT
----------------------------------------------- */
+/* CONTROLS — BOTTOM LEFT */
 .controls-wrapper {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    display: flex;
-    flex-direction: row; /* SIDE BY SIDE */
-    gap: 15px;
+    display: none;
 }
 
 /* BUTTONS */

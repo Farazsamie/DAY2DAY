@@ -22,15 +22,10 @@
         </div>
     </div>
 
-    <!-- BOTTOM LEFT BUTTONS -->
-    <div class="controls-wrapper">
-        <button class="btn btn-green" onclick="exportToExcel()">Excel</button>
-        <button class="btn btn-indigo" onclick="switchToTimebox()">Time Boxing</button>
-        <button class="btn btn-red" onclick="clearAllData()">Clear</button>
-    </div>
+    <!-- BUTTONS REMOVED -->
 
 
-    <div id="timerView" class="container">
+    <div id="timerView" class="container hidden">
 
         <h1 class="title"></h1>
 
@@ -116,7 +111,7 @@
 
 
     <!-- TIMEBOX VIEW -->
-    <div id="timeboxView" class="hidden container">
+    <div id="timeboxView" class="container">
         <h1>Time Boxing</h1>
         <div id="timeSlotsContainer"></div>
     </div>
@@ -140,6 +135,7 @@ let focusHistory = [];
 let expandedDays = {};
 let expandedPrayerTimes = {};
 let currentView = 'timer';
+let editModeActive = false;
 
 const categories = ['ISLAM','CAREER','HEALTH','ASSETS','INTERESTS'];
 
@@ -601,6 +597,56 @@ function switchToTimer(){
 }
 
 /* TIMEBOX */
+function toggleEditMode() {
+    editModeActive = !editModeActive;
+    generateTimeSlots();
+}
+
+function addManualEntry(prayer) {
+    const category = document.getElementById(`category-${prayer}`).value;
+    const task = document.getElementById(`task-${prayer}`).value.trim();
+    const startTime = document.getElementById(`startTime-${prayer}`).value;
+    const endTime = document.getElementById(`endTime-${prayer}`).value;
+    
+    if (!task) {
+        alert("Please enter what you did");
+        return;
+    }
+    
+    const nowObj = new Date();
+    
+    const entry = {
+        task: task,
+        category: category,
+        timerTime: 0,
+        stopwatchTime: 0,
+        focusTime: 0,
+        timestamp: nowObj.toISOString(),
+        prayerTime: prayer,
+        rating: undefined,
+        taskCompleted: true,
+        isManual: true,
+        startTime: startTime || '',
+        endTime: endTime || ''
+    };
+    
+    focusHistory.push(entry);
+    
+    document.getElementById(`category-${prayer}`).value = 'ISLAM';
+    document.getElementById(`task-${prayer}`).value = '';
+    document.getElementById(`startTime-${prayer}`).value = '';
+    document.getElementById(`endTime-${prayer}`).value = '';
+    
+    generateTimeSlots();
+}
+
+function deleteEntry(index) {
+    if (confirm("Delete this entry?")) {
+        focusHistory.splice(index, 1);
+        generateTimeSlots();
+    }
+}
+
 function generateTimeSlots(){
     const box=document.getElementById('timeSlotsContainer');
     const today=new Date().toDateString();
@@ -610,41 +656,80 @@ function generateTimeSlots(){
     
     prayerOrder.forEach(p => prayerSessions[p] = []);
     
-    focusHistory.forEach(e=>{
+    focusHistory.forEach((e, index) => {
         const d=new Date(e.timestamp);
         if(d.toDateString()===today){
             const prayer = e.prayerTime;
             if(prayerSessions[prayer]){
-                prayerSessions[prayer].push(e);
+                prayerSessions[prayer].push({...e, index: index});
             }
         }
     });
     
-    let html = '<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:space-around;">';
+    let html = `
+        <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+            <button onclick="toggleEditMode()" class="btn ${editModeActive ? 'btn-yellow' : 'btn-indigo'}" style="padding:8px 16px;">
+                ${editModeActive ? '✓ Done Editing' : '✎ Edit'}
+            </button>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:space-around;">
+    `;
     
     prayerOrder.forEach(prayer => {
         const sessions = prayerSessions[prayer];
+        
         html+=`
-            <div style="border:1px solid #374151;padding:12px;flex:1;min-width:150px;max-width:200px;">
+            <div style="border:1px solid #374151;padding:12px;flex:1;min-width:150px;max-width:280px;">
                 <strong style="display:block;margin-bottom:8px;text-align:center;">${prayer}</strong>
         `;
+        
+        // Display existing sessions
         if(sessions.length > 0){
             sessions.forEach(s=>{
+                const deleteBtn = editModeActive ? `<button onclick="deleteEntry(${s.index})" style="background:none;border:none;color:#f87171;cursor:pointer;padding:0;font-size:1rem;margin-left:4px;">×</button>` : '';
+                const timeDisplay = s.startTime && s.endTime ? `<div style="font-size:0.75rem;color:#fbbf24;margin-top:2px;">${s.startTime} - ${s.endTime}</div>` : '';
                 html+=`
-                    <div style="margin-top:6px;font-size:0.85rem;">
-                        <span class="category-badge ${getCategoryClass(s.category)}">${s.category}</span>
-                        <div style="margin-top:2px;">${s.task}</div>
-                        <div style="font-size:0.75rem;color:#9ca3af;">Focus: ${formatFocusTime(s.focusTime)}</div>
+                    <div style="margin-top:6px;font-size:0.85rem;padding:6px;background:#1f2937;border-radius:4px;display:flex;justify-content:space-between;align-items:flex-start;">
+                        <div style="flex:1;">
+                            <span class="category-badge ${getCategoryClass(s.category)}">${s.category}</span>
+                            <div style="margin-top:2px;">${s.task}</div>
+                            ${timeDisplay}
+                            ${s.focusTime > 0 ? `<div style="font-size:0.75rem;color:#9ca3af;">Focus: ${formatFocusTime(s.focusTime)}</div>` : ''}
+                        </div>
+                        ${deleteBtn}
                     </div>
                 `;
             });
-        } else {
-            html += '<div style="color:#6b7280;font-size:0.85rem;text-align:center;">No sessions</div>';
+        } else if(!editModeActive) {
+            html += '<div style="color:#6b7280;font-size:0.85rem;text-align:center;margin-top:6px;">No sessions</div>';
         }
+        
+        // Show input form only in edit mode
+        if(editModeActive) {
+            html += `
+                <div style="margin-top:12px;padding:8px;background:#1a1a1a;border-radius:4px;">
+                    <div style="font-size:0.75rem;font-weight:bold;color:#9ca3af;margin-bottom:6px;">Add to ${prayer}</div>
+                    <select id="category-${prayer}" style="width:100%;padding:4px;margin:4px 0;background:#312D2A;color:#f3f4f6;border:1px solid #4b4745;border-radius:3px;font-size:0.8rem;">
+                        <option value="ISLAM">Islam</option>
+                        <option value="CAREER">Career</option>
+                        <option value="HEALTH">Health</option>
+                        <option value="ASSETS">Assets</option>
+                        <option value="INTERESTS">Interests</option>
+                    </select>
+                    <input type="text" id="task-${prayer}" placeholder="What did you do?" style="width:100%;padding:4px;margin:4px 0;background:#312D2A;color:#f3f4f6;border:1px solid #4b4745;border-radius:3px;font-size:0.8rem;">
+                    <div style="display:flex;gap:4px;margin:4px 0;">
+                        <input type="time" id="startTime-${prayer}" placeholder="Start" style="flex:1;padding:4px;background:#312D2A;color:#f3f4f6;border:1px solid #4b4745;border-radius:3px;font-size:0.8rem;">
+                        <input type="time" id="endTime-${prayer}" placeholder="End" style="flex:1;padding:4px;background:#312D2A;color:#f3f4f6;border:1px solid #4b4745;border-radius:3px;font-size:0.8rem;">
+                    </div>
+                    <button onclick="addManualEntry('${prayer}')" class="btn btn-green" style="width:100%;margin-top:6px;">Add</button>
+                </div>
+            `;
+        }
+        
         html+="</div>";
     });
     
-    html += '</div>';
+    html += '</div></div>';
     box.innerHTML=html;
 }
 
@@ -676,7 +761,7 @@ function updateCountdowns(){
 function init(){
     updateCountdowns();
     setInterval(updateCountdowns,1000);
-    renderHistory();
+    generateTimeSlots();
 }
 document.addEventListener('DOMContentLoaded', init);
 
