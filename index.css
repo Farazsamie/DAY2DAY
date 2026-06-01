@@ -8,7 +8,7 @@
 /* BASE COLORS */
 :root {
     --dark-bg: #1b1a1a;     /* main background */
-    --card-bg: #312d2a;     /* card + button background */
+    --card-bg: #2d2b28;     /* card + button background */
     --accent-gray: #656565; /* secondary dark gray */
     --text-light: #f6f3f3;  /* universal light text */
 }
@@ -51,7 +51,7 @@ body, h1, h2, h3, h4, h5, h6, p, div, button, label {
 .countdown-box {
     padding: 12px 16px;
     background: var(--card-bg);
-    border-radius: 8px;
+    border-radius: 12px;
     min-width: 160px;
 }
 
@@ -78,7 +78,7 @@ body, h1, h2, h3, h4, h5, h6, p, div, button, label {
     background: var(--card-bg);
     color: var(--text-light) !important;
     padding: 5px 20px;
-    border-radius: 1.5px;
+    border-radius: 8px;
     border: 0.5px solid var(--accent-gray);
     cursor: pointer;
     transition: 0.1s;
@@ -114,7 +114,7 @@ body, h1, h2, h3, h4, h5, h6, p, div, button, label {
 .card {
     background: var(--card-bg);
     padding: 1.25rem;
-    border-radius: 5px;
+    border-radius: 16px;
     flex: 0.5;
 }
 
@@ -163,6 +163,7 @@ body, h1, h2, h3, h4, h5, h6, p, div, button, label {
     background: #2d2d2d;
     border: 1px solid #1d1c1c;
     color: var(--text-light);
+    border-radius: 8px;
 }
 
 .form-input:focus, .form-select:focus {
@@ -190,6 +191,7 @@ body, h1, h2, h3, h4, h5, h6, p, div, button, label {
     color: var(--text-light);
     text-align: center;
     font-size: 1rem;
+    border-radius: 8px;
 }
 
 .timer-colon {
@@ -204,7 +206,7 @@ body, h1, h2, h3, h4, h5, h6, p, div, button, label {
 .category-badge {
     padding: 0.25rem 0.5rem;
     font-size: 0.75rem;
-    border-radius: 4px;
+    border-radius: 6px;
     border: 1px solid var(--accent-gray);
     color: var(--text-light);
     background: #2f2f2f;
@@ -222,7 +224,7 @@ body, h1, h2, h3, h4, h5, h6, p, div, button, label {
     background: #2f2f2f;
     margin-bottom: 1rem;
     padding: 0.75rem;
-    border-radius: 8px;
+    border-radius: 12px;
 }
 
 .day-header {
@@ -245,7 +247,7 @@ body, h1, h2, h3, h4, h5, h6, p, div, button, label {
     padding: 0.75rem;
     border-left: 4px solid var(--accent-gray);
     margin: 0.5rem 0;
-    border-radius: 4px;
+    border-radius: 8px;
 }
 
 .session-title {

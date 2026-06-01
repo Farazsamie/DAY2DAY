@@ -12,8 +12,7 @@
     <!-- BOTTOM RIGHT COUNTDOWNS -->
     <div class="countdown-wrapper">
         <div class="countdown-box" id="countApr3">
-            <div class="countdown-label">APRIL 3RD, 2026</div>
-            <div class="countdown-time" id="countdown1">Loading..</div>
+            <div class="countdown-label">APRIL 3RD, 2027</div>
         </div>
 
         <div class="countdown-box" id="countNextMonth">
@@ -41,7 +40,7 @@
 
                 <div style="text-align:center;margin-bottom:1rem;">
                     <label class="form-label">Break Activity</label>
-                    <input type="text" id="breakInput" placeholder=" " style="width:100%;padding:0.5rem;background:#312D2A;color:#f3f4f6;border:1px solid #4b4745;border-radius:4px;margin-top:0.5rem;">
+                    <input type="text" id="breakInput" placeholder=" " style="width:100%;padding:0.5rem;background:#312D2A;color:#f3f4f6;border:1px solid #4b4745;border-radius:8px;margin-top:0.5rem;">
                 </div>
 
                 <div class="button-group">
@@ -89,7 +88,7 @@
                 </div>
                 
                 <div class="button-group" style="display:flex;gap:8px;margin-top:12px;align-items:center;">
-                    <input type="number" id="taskRating" min="0" max="10" placeholder=" " style="flex:0.4;padding:4px;background:#312D2A;color:#EBE0D7;border:1px solid #4b4745;border-radius:4px;">
+                    <input type="number" id="taskRating" min="0" max="10" placeholder=" " style="flex:0.4;padding:4px;background:#312D2A;color:#EBE0D7;border:1px solid #4b4745;border-radius:8px;">
                     <button class="btn" style="background:#312D2A;color:#EBE0D7;flex:0 0 10px;border:1px solid #4b4745;" onclick="completeTask()">completed</button>
                 </div>
             </div>
@@ -456,7 +455,7 @@ function drawTimelineGraph(){
     if(todaySessions.length > 1){
         ctx.beginPath();
         ctx.strokeStyle = '#EBE0D7';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1;
         
         todaySessions.forEach((session, index) => {
             const sessionDate = new Date(session.timestamp);
@@ -485,7 +484,7 @@ function drawTimelineGraph(){
         
         ctx.fillStyle = '#EBE0D7';
         ctx.beginPath();
-        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.arc(x, y, 2.5, 0, Math.PI * 2);
         ctx.fill();
     });
 }
@@ -615,22 +614,59 @@ function addManualEntry(prayer) {
     
     const nowObj = new Date();
     
-    const entry = {
-        task: task,
-        category: category,
-        timerTime: 0,
-        stopwatchTime: 0,
-        focusTime: 0,
-        timestamp: nowObj.toISOString(),
-        prayerTime: prayer,
-        rating: undefined,
-        taskCompleted: true,
-        isManual: true,
-        startTime: startTime || '',
-        endTime: endTime || ''
-    };
+    // Get the prayer times to add entry to
+    let prayersToAdd = [prayer];
     
-    focusHistory.push(entry);
+    // If both start and end times are provided, find all prayer periods in that range
+    if (startTime && endTime) {
+        const [startHour, startMin] = startTime.split(':').map(Number);
+        const [endHour, endMin] = endTime.split(':').map(Number);
+        const startTotalMin = startHour * 60 + startMin;
+        const endTotalMin = endHour * 60 + endMin;
+        
+        const prayerRanges = {
+            'Fajr': {start: 4*60, end: 7*60},
+            'Post Fajr': {start: 7*60, end: 11*60},
+            'Dhuhr': {start: 11*60, end: 15*60},
+            'Asr': {start: 15*60, end: 18*60},
+            'Maghrib': {start: 18*60, end: 20*60},
+            'Isha': {start: 20*60, end: 24*60}
+        };
+        
+        prayersToAdd = [];
+        const prayerOrder = ['Fajr', 'Post Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+        
+        // Check which prayer periods overlap with the time range
+        prayerOrder.forEach(p => {
+            const range = prayerRanges[p];
+            // Check if time range overlaps with this prayer period
+            if (startTotalMin < range.end && endTotalMin > range.start) {
+                prayersToAdd.push(p);
+            }
+        });
+        
+        if (prayersToAdd.length === 0) prayersToAdd = [prayer];
+    }
+    
+    // Add entry to all relevant prayer periods
+    prayersToAdd.forEach(p => {
+        const entry = {
+            task: task,
+            category: category,
+            timerTime: 0,
+            stopwatchTime: 0,
+            focusTime: 0,
+            timestamp: nowObj.toISOString(),
+            prayerTime: p,
+            rating: undefined,
+            taskCompleted: true,
+            isManual: true,
+            startTime: startTime || '',
+            endTime: endTime || ''
+        };
+        
+        focusHistory.push(entry);
+    });
     
     document.getElementById(`category-${prayer}`).value = 'ISLAM';
     document.getElementById(`task-${prayer}`).value = '';
@@ -702,6 +738,8 @@ function generateTimeSlots(){
             });
         } else if(!editModeActive) {
             html += '<div style="color:#6b7280;font-size:0.85rem;text-align:center;margin-top:6px;">No sessions</div>';
+        } else {
+            html += '<div style="color:#6b7280;font-size:0.85rem;text-align:center;margin-top:6px;">No sessions</div>';
         }
         
         // Show input form only in edit mode
@@ -709,17 +747,17 @@ function generateTimeSlots(){
             html += `
                 <div style="margin-top:12px;padding:8px;background:#1a1a1a;border-radius:4px;">
                     <div style="font-size:0.75rem;font-weight:bold;color:#9ca3af;margin-bottom:6px;">Add to ${prayer}</div>
-                    <select id="category-${prayer}" style="width:100%;padding:4px;margin:4px 0;background:#312D2A;color:#f3f4f6;border:1px solid #4b4745;border-radius:3px;font-size:0.8rem;">
+                    <select id="category-${prayer}" style="width:100%;padding:4px;margin:4px 0;background:#312D2A;color:#f3f4f6;border:1px solid #4b4745;border-radius:8px;font-size:0.8rem;">
                         <option value="ISLAM">Islam</option>
                         <option value="CAREER">Career</option>
                         <option value="HEALTH">Health</option>
                         <option value="ASSETS">Assets</option>
                         <option value="INTERESTS">Interests</option>
                     </select>
-                    <input type="text" id="task-${prayer}" placeholder="What did you do?" style="width:100%;padding:4px;margin:4px 0;background:#312D2A;color:#f3f4f6;border:1px solid #4b4745;border-radius:3px;font-size:0.8rem;">
+                    <input type="text" id="task-${prayer}" placeholder="What did you do?" style="width:100%;padding:4px;margin:4px 0;background:#312D2A;color:#f3f4f6;border:1px solid #4b4745;border-radius:8px;font-size:0.8rem;">
                     <div style="display:flex;gap:4px;margin:4px 0;">
-                        <input type="time" id="startTime-${prayer}" placeholder="Start" style="flex:1;padding:4px;background:#312D2A;color:#f3f4f6;border:1px solid #4b4745;border-radius:3px;font-size:0.8rem;">
-                        <input type="time" id="endTime-${prayer}" placeholder="End" style="flex:1;padding:4px;background:#312D2A;color:#f3f4f6;border:1px solid #4b4745;border-radius:3px;font-size:0.8rem;">
+                        <input type="time" id="startTime-${prayer}" placeholder="Start" style="flex:1;padding:4px;background:#312D2A;color:#f3f4f6;border:1px solid #4b4745;border-radius:8px;font-size:0.8rem;">
+                        <input type="time" id="endTime-${prayer}" placeholder="End" style="flex:1;padding:4px;background:#312D2A;color:#f3f4f6;border:1px solid #4b4745;border-radius:8px;font-size:0.8rem;">
                     </div>
                     <button onclick="addManualEntry('${prayer}')" class="btn btn-green" style="width:100%;margin-top:6px;">Add</button>
                 </div>
@@ -737,7 +775,8 @@ function generateTimeSlots(){
 function updateCountdowns(){
     const now=new Date();
 
-    const target=new Date('2026-04-03T00:00:00');
+    // Target date: April 3, 2027
+    const target=new Date(2027, 3, 3, 0, 0, 0);
     const d1=target-now;
     if(d1>0){
         const ds=Math.floor(d1/(1000*60*60*24));
@@ -745,6 +784,8 @@ function updateCountdowns(){
         const ms=Math.floor((d1%(1000*60*60))/ (1000*60));
         const ss=Math.floor((d1%(1000*60))/1000);
         document.getElementById('countdown1').textContent = `${ds}d ${hs}:${ms.toString().padStart(2,'0')}:${ss.toString().padStart(2,'0')}`;
+    } else {
+        document.getElementById('countdown1').textContent = '0d 0:00:00';
     }
 
     const nm = new Date(now.getFullYear(),now.getMonth()+1,3);
@@ -755,6 +796,8 @@ function updateCountdowns(){
         const ms=Math.floor((d2%(1000*60*60))/ (1000*60));
         const ss=Math.floor((d2%(1000*60))/1000);
         document.getElementById('countdown2').textContent = `${ds}d ${hs}:${ms.toString().padStart(2,'0')}:${ss.toString().padStart(2,'0')}`;
+    } else {
+        document.getElementById('countdown2').textContent = '0d 0:00:00';
     }
 }
 
